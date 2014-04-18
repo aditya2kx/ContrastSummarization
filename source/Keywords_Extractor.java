@@ -64,80 +64,85 @@ public class Keywords_Extractor
 	    
 		try
 		{
-			fis = new FileInputStream(filename);
-			br = new BufferedReader(new InputStreamReader(fis));
-			String currentLine = null;
-			
-			while((currentLine = br.readLine())!=null)
+			for(int index = 0; index<15 ; index++)
 			{
-				String previousWord = null, previousPreviousWord = null,
-						currentWord = null;
-				//String tokens[] = currentLine.split(" ");
-				Annotation document = new Annotation(currentLine);
-			    pipeline.annotate(document);
-			    List<CoreMap> sentences = document.get(SentencesAnnotation.class);
-			    
-			    for(CoreMap sentence: sentences)
-			    {
-			      for (CoreLabel word: sentence.get(TokensAnnotation.class)) 
-			      {
-			    	  	String token = word.get(TextAnnotation.class);
-			    	  	currentWord = token.toLowerCase();
-			    	  	Pattern p = Pattern.compile(".*[a-z].*");
-			    	  	 Matcher m = p.matcher(currentWord);
-			    	  	 boolean b = m.matches();
-			    	  	 if(!b || currentWord.contains("-rrb-") 
-			    	  			 || currentWord.contains("-lrb-"))
-			    	  	 {
-			    	  		 continue;
-			    	  	 }
-			    	  	
-						if(!StopWordsList.isStopWord(currentWord))
-						{
-				    	  	if(unigrams.containsKey(currentWord))
+				fis = new FileInputStream(filename+index+".out");
+				br = new BufferedReader(new InputStreamReader(fis));
+				String currentLine = null;
+				
+				while((currentLine = br.readLine())!=null)
+				{
+					String previousWord = null, previousPreviousWord = null,
+							currentWord = null;
+					//String tokens[] = currentLine.split(" ");
+					Annotation document = new Annotation(currentLine);
+				    pipeline.annotate(document);
+				    List<CoreMap> sentences = document.get(SentencesAnnotation.class);
+				    
+				    for(CoreMap sentence: sentences)
+				    {
+				      for (CoreLabel word: sentence.get(TokensAnnotation.class)) 
+				      {
+				    	  	String token = word.get(TextAnnotation.class);
+				    	  	currentWord = token.toLowerCase();
+				    	  	Pattern p = Pattern.compile(".*[a-z].*");
+				    	  	 Matcher m = p.matcher(currentWord);
+				    	  	 boolean b = m.matches();
+				    	  	 if(!b || currentWord.contains("-rrb-") 
+				    	  			 || currentWord.contains("-lrb-"))
+				    	  	 {
+				    	  		 continue;
+				    	  	 }
+				    	  	
+							if(!StopWordsList.isStopWord(currentWord))
 							{
-								unigrams.put(currentWord, unigrams.get(currentWord)+1);
+					    	  	if(unigrams.containsKey(currentWord))
+								{
+									unigrams.put(currentWord, unigrams.get(currentWord)+1);
+								}
+								else
+								{
+									unigrams.put(currentWord, 1);
+								}
 							}
-							else
+							
+							if(previousWord!=null && (!StopWordsList.isStopWord(currentWord) 
+									|| !StopWordsList.isStopWord(previousWord)))
 							{
-								unigrams.put(currentWord, 1);
+								if(previousWord!=null && bigrams.containsKey(previousWord+" "+currentWord))
+								{
+									bigrams.put(previousWord+" "+currentWord, bigrams.get(previousWord+" "+currentWord)+1);
+								}
+								else if(previousWord!=null)
+								{
+									bigrams.put(previousWord+" "+currentWord, 1);
+								}
 							}
-						}
-						
-						if(previousWord!=null && (!StopWordsList.isStopWord(currentWord) 
-								|| !StopWordsList.isStopWord(previousWord)))
-						{
-							if(previousWord!=null && bigrams.containsKey(previousWord+" "+currentWord))
-							{
-								bigrams.put(previousWord+" "+currentWord, bigrams.get(previousWord+" "+currentWord)+1);
-							}
-							else if(previousWord!=null)
-							{
-								bigrams.put(previousWord+" "+currentWord, 1);
-							}
-						}
-						if(previousPreviousWord!=null && previousWord!=null &&
-								(!StopWordsList.isStopWord(currentWord) 
-								|| !StopWordsList.isStopWord(previousPreviousWord)
-								|| !StopWordsList.isStopWord(previousWord)))
-						{	
 							if(previousPreviousWord!=null && previousWord!=null &&
-									trigrams.containsKey(previousPreviousWord+" "+previousWord+" "+currentWord))
-							{
-								trigrams.put(previousPreviousWord+" "+previousWord+" "+currentWord,
-										trigrams.get(previousPreviousWord+" "+previousWord+" "+currentWord)+1);
+									(!StopWordsList.isStopWord(currentWord) 
+									|| !StopWordsList.isStopWord(previousPreviousWord)
+									|| !StopWordsList.isStopWord(previousWord)))
+							{	
+								if(previousPreviousWord!=null && previousWord!=null &&
+										trigrams.containsKey(previousPreviousWord+" "+previousWord+" "+currentWord))
+								{
+									trigrams.put(previousPreviousWord+" "+previousWord+" "+currentWord,
+											trigrams.get(previousPreviousWord+" "+previousWord+" "+currentWord)+1);
+								}
+								else if(previousPreviousWord!=null && previousWord!=null)
+								{
+									trigrams.put(previousPreviousWord+" "+previousWord+" "+currentWord, 1);
+								}
 							}
-							else if(previousPreviousWord!=null && previousWord!=null)
-							{
-								trigrams.put(previousPreviousWord+" "+previousWord+" "+currentWord, 1);
-							}
-						}
-						previousPreviousWord = previousWord;
-						previousWord = currentWord;
-
-			      }
-			    }
-			}
+							previousPreviousWord = previousWord;
+							previousWord = currentWord;
+	
+				      }
+				    }
+				}
+				fis.close();
+				System.out.println("File: "+index+" processed !");
+			}		
 		}
 		catch(FileNotFoundException e)
 		{
