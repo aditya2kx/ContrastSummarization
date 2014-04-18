@@ -86,8 +86,8 @@ public class Keywords_Extractor
 			    	  	Pattern p = Pattern.compile(".*[a-z].*");
 			    	  	 Matcher m = p.matcher(currentWord);
 			    	  	 boolean b = m.matches();
-			    	  	 if(!b || currentWord.equalsIgnoreCase("-rrb-") 
-			    	  			 || currentWord.equalsIgnoreCase("-lrb-"))
+			    	  	 if(!b || currentWord.contains("-rrb-") 
+			    	  			 || currentWord.contains("-lrb-"))
 			    	  	 {
 			    	  		 continue;
 			    	  	 }
