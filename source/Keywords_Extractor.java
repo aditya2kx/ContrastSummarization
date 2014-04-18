@@ -27,11 +27,11 @@ class ScoreComparator<String, Integer extends Comparable<Integer>>
 	@Override
 	public int compare(Entry<String, Integer> arg0, Entry<String, Integer> arg1)
 	{
-		int count1 = (java.lang.Integer) arg0.getValue();
-		int count2 = (java.lang.Integer) arg1.getValue();
-		java.lang.String str1 = (" " + count1 + arg0.getKey());
-		java.lang.String str2 = (" " + count2 + arg1.getKey());
-		return -1 * str1.compareTo(str2);
+		Integer count1 =  arg0.getValue();
+		Integer count2 = arg1.getValue();
+		//java.lang.String str1 = (" " + count1 + arg0.getKey());
+		//java.lang.String str2 = (" " + count2 + arg1.getKey());
+		return -1 * (count1.compareTo(count2));
 	}	
 }
 
@@ -80,7 +80,7 @@ public class Keywords_Extractor
 			      for (CoreLabel word: sentence.get(TokensAnnotation.class)) 
 			      {
 			    	  	String token = word.get(TextAnnotation.class);
-			    	  	currentWord = token;
+			    	  	currentWord = token.toLowerCase();
 						if(unigrams.containsKey(currentWord))
 						{
 							unigrams.put(currentWord, unigrams.get(currentWord)+1);
