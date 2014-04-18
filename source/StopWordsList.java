@@ -43,7 +43,7 @@ public class StopWordsList {
 	public static boolean isStopWord(String word){
 		boolean stopWord = false;
 		String onlyChars = word.replaceAll("[^a-zA-Z]","");
-		stopWord = stopWordsSet.contains(word) && onlyChars.length()>2;
+		stopWord = stopWordsSet.contains(word) || onlyChars.length()<=2;
 		return stopWord;
 	}
 }
