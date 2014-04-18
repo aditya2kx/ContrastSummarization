@@ -12,11 +12,13 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
+import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.util.CoreMap;
@@ -81,32 +83,53 @@ public class Keywords_Extractor
 			      {
 			    	  	String token = word.get(TextAnnotation.class);
 			    	  	currentWord = token.toLowerCase();
-						if(unigrams.containsKey(currentWord))
+			    	  	Pattern p = Pattern.compile(".*[a-z].*");
+			    	  	 Matcher m = p.matcher(currentWord);
+			    	  	 boolean b = m.matches();
+			    	  	 if(!b)
+			    	  	 {
+			    	  		 continue;
+			    	  	 }
+			    	  	
+						if(!StopWordsList.isStopWord(currentWord))
 						{
-							unigrams.put(currentWord, unigrams.get(currentWord)+1);
-						}
-						else
-						{
-							unigrams.put(currentWord, 1);
+				    	  	if(unigrams.containsKey(currentWord))
+							{
+								unigrams.put(currentWord, unigrams.get(currentWord)+1);
+							}
+							else
+							{
+								unigrams.put(currentWord, 1);
+							}
 						}
 						
-						if(previousWord!=null && bigrams.containsKey(previousWord+" "+currentWord))
+						if(previousWord!=null && (!StopWordsList.isStopWord(currentWord) 
+								|| !StopWordsList.isStopWord(previousWord)))
 						{
-							bigrams.put(previousWord+" "+currentWord, bigrams.get(previousWord+" "+currentWord)+1);
-						}
-						else if(previousWord!=null)
-						{
-							bigrams.put(previousWord+" "+currentWord, 1);
+							if(previousWord!=null && bigrams.containsKey(previousWord+" "+currentWord))
+							{
+								bigrams.put(previousWord+" "+currentWord, bigrams.get(previousWord+" "+currentWord)+1);
+							}
+							else if(previousWord!=null)
+							{
+								bigrams.put(previousWord+" "+currentWord, 1);
+							}
 						}
 						if(previousPreviousWord!=null && previousWord!=null &&
-								trigrams.containsKey(previousPreviousWord+" "+previousWord+" "+currentWord))
-						{
-							trigrams.put(previousPreviousWord+" "+previousWord+" "+currentWord,
-									trigrams.get(previousPreviousWord+" "+previousWord+" "+currentWord)+1);
-						}
-						else if(previousPreviousWord!=null && previousWord!=null)
-						{
-							trigrams.put(previousPreviousWord+" "+previousWord+" "+currentWord, 1);
+								(!StopWordsList.isStopWord(currentWord) 
+								|| !StopWordsList.isStopWord(previousPreviousWord)
+								|| !StopWordsList.isStopWord(previousWord)))
+						{	
+							if(previousPreviousWord!=null && previousWord!=null &&
+									trigrams.containsKey(previousPreviousWord+" "+previousWord+" "+currentWord))
+							{
+								trigrams.put(previousPreviousWord+" "+previousWord+" "+currentWord,
+										trigrams.get(previousPreviousWord+" "+previousWord+" "+currentWord)+1);
+							}
+							else if(previousPreviousWord!=null && previousWord!=null)
+							{
+								trigrams.put(previousPreviousWord+" "+previousWord+" "+currentWord, 1);
+							}
 						}
 						previousPreviousWord = previousWord;
 						previousWord = currentWord;
