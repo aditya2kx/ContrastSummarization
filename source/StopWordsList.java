@@ -21,8 +21,10 @@ public class StopWordsList {
 			stopWordsSet = new HashSet<String>();
 			while((word = br.readLine())!=null)
 			{
-				stopWordsSet.add(word);
-				fos.write((word+"\n").getBytes("UTF8"));
+				if(stopWordsSet.add(word))
+				{
+					fos.write((word+"\n").getBytes("UTF8"));
+				}
 			}
 			fis.close();
 			fos.close();
