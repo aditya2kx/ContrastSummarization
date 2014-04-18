@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry excluding="Jars/JSON-java-master/|Jars/JSON-java-master/|Jars/JSON-java-master/|Jars/JSON-java-master/" kind="src" path=""/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
+	<classpathentry kind="lib" path="Jars/ejml-0.23.jar"/>
+	<classpathentry kind="lib" path="Jars/joda-time-2.1-sources.jar"/>
+	<classpathentry kind="lib" path="Jars/joda-time.jar"/>
+	<classpathentry kind="lib" path="Jars/jollyday-0.4.7-sources.jar"/>
+	<classpathentry kind="lib" path="Jars/jollyday.jar"/>
+	<classpathentry kind="lib" path="Jars/simmetrics_jar_v1_6_2_d07_02_07.jar"/>
+	<classpathentry kind="lib" path="Jars/stanford-corenlp-3.3.1-javadoc.jar"/>
+	<classpathentry kind="lib" path="Jars/stanford-corenlp-3.3.1-sources.jar"/>
+	<classpathentry kind="lib" path="Jars/stanford-corenlp-3.3.1.jar"/>
+	<classpathentry kind="lib" path="Jars/xom-1.2.10-src.jar"/>
+	<classpathentry kind="lib" path="Jars/xom.jar"/>
+	<classpathentry kind="lib" path="Jars/JSON-java-master"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
