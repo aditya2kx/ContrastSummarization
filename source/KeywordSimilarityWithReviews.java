@@ -102,7 +102,7 @@ public class KeywordSimilarityWithReviews {
 			}
 
 			for(String term : ngramsList){
-				if(term.charAt(0) == keyword.charAt(0)){
+				if(Character.toLowerCase(term.charAt(0)) == Character.toLowerCase(keyword.charAt(0))){
 					float score = levenshtein.getSimilarity(keyword, term);
 					if(score >= 0.8){
 						return sentence.toString() + "->->" + keyword + "->->" + score;
