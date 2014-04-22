@@ -6,12 +6,16 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
 import uk.ac.shef.wit.simmetrics.similaritymetrics.JaroWinkler;
+import uk.ac.shef.wit.simmetrics.similaritymetrics.Levenshtein;
 import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
@@ -21,10 +25,12 @@ import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.util.CoreMap;
 
 public class KeywordSimilarityWithReviews {
-	
+
 	private static Set<String> keywordSet;
 
 	private static JaroWinkler jaroWinkler;
+
+	private static Levenshtein levenshtein;
 	//private static JaccardSimilarity jc;
 
 	public static void main(String[] args) throws FileNotFoundException, IOException {
@@ -32,12 +38,14 @@ public class KeywordSimilarityWithReviews {
 			System.err.println("Usage: KeywordSimilarityWithReviews <keywords-file> <sentences-input-file>");
 			System.exit(0);
 		}
-		
-	    Properties props = new Properties();
-	    props.put("annotators", "tokenize, ssplit");
-	    StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
 
-	    String keywordsFile = args[0];//"aggregate_keywords_file.txt";
+		//"C:\Users\Santosh\google drive\Natural Language Processing Project\Dataset"
+		//"C:\\Users\\Santosh\\google drive\\Natural Language Processing Project\\Dataset\\\yelp_phoenix_academic_dataset.rest_reviews_splitsplitter_out\\review-sentences-file-15"
+		Properties props = new Properties();
+		props.put("annotators", "tokenize, ssplit");
+		StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
+
+		String keywordsFile = args[0];//"aggregate_keywords_file.txt";
 		//String sentencesFile = "yelp_phoenix_academic_dataset.rest_reviews_split";
 		String sentencesFile = args[1];//"TestFile";
 		String outputFile = args[1]+".out";
@@ -53,6 +61,7 @@ public class KeywordSimilarityWithReviews {
 
 		//Create the jaro winkler instance
 		jaroWinkler = new JaroWinkler();
+		levenshtein = new Levenshtein();
 
 		//sentences file
 		//"keyword_training_sentences_file_test"
@@ -60,27 +69,105 @@ public class KeywordSimilarityWithReviews {
 				BufferedReader reader = new BufferedReader(new FileReader(new File(sentencesFile)))){
 			while((readLine = reader.readLine()) != null){
 				//String[] wordsArray = readLine.split("\\s+");
-			    Annotation document = new Annotation(readLine);
-			    pipeline.annotate(document);
-			    List<CoreMap> sentences = document.get(SentencesAnnotation.class);
-			    
-			    for(CoreMap sentence: sentences)
-			    {
-			      for (CoreLabel token: sentence.get(TokensAnnotation.class)) 
-			      {
-			        String word = token.get(TextAnnotation.class);
-			        if(wordMatches(word.toLowerCase())){
-						writer.write(readLine);
-						writer.write("\n");
-						break;
+				Annotation document = new Annotation(readLine);
+				pipeline.annotate(document);
+				List<CoreMap> sentences = document.get(SentencesAnnotation.class);
+
+				for(CoreMap sentence: sentences)
+				{
+					String review = getReviewSentence(sentence);
+					if(review != null){
+						writer.write(review);;
+						writer.write("\n");;
 					}
-			      }
-			    }
+				}
 			}
 		}
 	}
 
-	public static boolean wordMatches(String word){
+	private static String getReviewSentence(CoreMap sentence){
+		System.out.println(sentence.toString());
+		Map<Integer, List<String>> ngramMap = new HashMap<>();
+		List<CoreLabel> coreLabelList = sentence.get(TokensAnnotation.class);
+		ngramMap.put(1, getUnigrams(coreLabelList));
+		ngramMap.put(2, getBigrams(coreLabelList));
+		ngramMap.put(3, getTrigrams(coreLabelList));
+
+		for(String keyword : keywordSet){
+			int wordLen = keyword.split("\\s+").length;
+			List<String> ngramsList = ngramMap.get(wordLen);
+
+			if(ngramsList == null){
+				ngramsList = getNgrams(coreLabelList, wordLen);
+			}
+			
+			for(String term : ngramsList){
+				float score = levenshtein.getSimilarity(keyword, term);
+				if(score >= 0.8){
+					return sentence.toString() + "->->" + keyword + "->->" + score;
+				}
+			}
+		}
+
+		return null;
+	}
+
+	private static List<String> getNgrams(List<CoreLabel> coreLabelList, int ngram){
+		List<String> ngramSet = new ArrayList<>();
+		StringBuffer buffer = new StringBuffer();
+		int count;
+		for(int index = 0; index < coreLabelList.size(); index++){
+			if(index + ngram < coreLabelList.size()){
+				count = 0;
+				while(count < ngram){
+					buffer.append(coreLabelList.get(count + index).get(TextAnnotation.class)).append(" ");
+					count++;
+				}
+
+				ngramSet.add(buffer.toString().trim());
+				buffer.setLength(0);
+			}
+		}
+
+		return ngramSet;
+	}
+
+	private static List<String> getTrigrams(List<CoreLabel> coreLabelList){
+		List<String> bigramSet = new ArrayList<>();
+		for(int index = 0; index < coreLabelList.size(); index++){
+			if(index + 2 < coreLabelList.size()){
+				bigramSet.add(coreLabelList.get(index).get(TextAnnotation.class) + " " + coreLabelList.get(index + 1).get(TextAnnotation.class) + " " + coreLabelList.get(index + 2).get(TextAnnotation.class));
+			}
+		}
+
+		return bigramSet;
+	}
+
+	private static List<String> getBigrams(List<CoreLabel> coreLabelList){
+		List<String> bigramSet = new ArrayList<>();
+		for(int index = 0; index < coreLabelList.size(); index++){
+			if(index + 1 < coreLabelList.size()){
+				bigramSet.add(coreLabelList.get(index).get(TextAnnotation.class) + " " + coreLabelList.get(index + 1).get(TextAnnotation.class));
+			}
+		}
+
+		return bigramSet;
+	}
+
+	private static List<String> getUnigrams(List<CoreLabel> coreLabelList){
+		List<String> unigramSet = new ArrayList<>();
+		for(int index = 0; index < coreLabelList.size(); index++){
+			unigramSet.add(coreLabelList.get(index).get(TextAnnotation.class));
+		}
+
+		return unigramSet;
+	}
+
+	/*private static boolean wordMatches(String word, String keyword){
+		return jaroWinkler.getSimilarity(keyword, word) > 0.96;
+	}
+
+	private static boolean wordMatches(String word){
 		for(String keyword : keywordSet){
 			float score = jaroWinkler.getSimilarity(keyword, word);
 			if(score > 0.96){
@@ -90,7 +177,7 @@ public class KeywordSimilarityWithReviews {
 		return false;
 	}
 
-	public static float wordMatchesWithScore(String word){
+	private static float wordMatchesWithScore(String word){
 		for(String keyword : keywordSet){
 			float score = jaroWinkler.getSimilarity(keyword, word);
 			if(score > 0.96){
@@ -98,6 +185,6 @@ public class KeywordSimilarityWithReviews {
 			}
 		}
 		return Float.MIN_VALUE;
-	}
+	}*/
 
 }
