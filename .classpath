@@ -10,9 +10,10 @@
 	<classpathentry kind="lib" path="Jars/simmetrics_jar_v1_6_2_d07_02_07.jar"/>
 	<classpathentry kind="lib" path="Jars/stanford-corenlp-3.3.1-javadoc.jar"/>
 	<classpathentry kind="lib" path="Jars/stanford-corenlp-3.3.1-sources.jar"/>
-	<classpathentry kind="lib" path="Jars/stanford-corenlp-3.3.1.jar"/>
+	<classpathentry kind="lib" path="Jars/stanford-corenlp-3.3.1.jar" sourcepath="Jars/stanford-corenlp-3.3.1-sources.jar"/>
 	<classpathentry kind="lib" path="Jars/xom-1.2.10-src.jar"/>
 	<classpathentry kind="lib" path="Jars/xom.jar"/>
 	<classpathentry kind="lib" path="Jars/JSON-java-master"/>
+	<classpathentry kind="lib" path="E:/USC/Academic/Natural Language Processing/Homeworks/No 3/Tools/stanford-corenlp-full-2014-01-04/stanford-corenlp-full-2014-01-04/stanford-corenlp-3.3.1-models.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
