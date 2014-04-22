@@ -100,11 +100,13 @@ public class KeywordSimilarityWithReviews {
 			if(ngramsList == null){
 				ngramsList = getNgrams(coreLabelList, wordLen);
 			}
-			
+
 			for(String term : ngramsList){
-				float score = levenshtein.getSimilarity(keyword, term);
-				if(score >= 0.8){
-					return sentence.toString() + "->->" + keyword + "->->" + score;
+				if(term.charAt(0) == keyword.charAt(0)){
+					float score = levenshtein.getSimilarity(keyword, term);
+					if(score >= 0.8){
+						return sentence.toString() + "->->" + keyword + "->->" + score;
+					}
 				}
 			}
 		}
