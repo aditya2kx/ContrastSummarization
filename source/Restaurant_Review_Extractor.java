@@ -23,7 +23,7 @@ public class Restaurant_Review_Extractor
 		try
 		{
 			fis = new FileInputStream("E:\\USC\\Academic\\Natural Language Processing\\Project\\Dataset\\yelp_phoenix_academic_dataset\\yelp_phoenix_academic_dataset");
-			String input = "C:\\Users\\Rockstar\\Google Drive\\Natural Language Processing Project\\Dataset\\yelp_phoenix_academic_dataset.rest_business";
+			String input = "C:\\Users\\Rockstar\\Google Drive\\Natural Language Processing Project\\Dataset\\Restaurants Reviews Per Restaurant\\Rest_Business";
 			fos1 = new FileOutputStream(input);
 			String currentLine = null;
 			br = new BufferedReader(new InputStreamReader(fis));
@@ -65,12 +65,17 @@ public class Restaurant_Review_Extractor
 				{
 					String id = json.getString("business_id");
 					String reviews_content = json.getString("text");
-					fos2 = new FileOutputStream(input+"_"+id, true);
+					if(reviews_content.length()<3)
+					{
+						continue;
+					}
+					
 					if(business_ids.contains(id))
 					{
+						fos2 = new FileOutputStream(input+"_"+id, true);
 						fos2.write((reviews_content+"\n").getBytes("UTF8"));
+						fos2.close();
 					}
-					fos2.close();
 				}
 				catch(JSONException e)
 				{

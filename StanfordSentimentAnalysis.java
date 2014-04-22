@@ -200,6 +200,8 @@ public class StanfordSentimentAnalysis
 	
 	public static void main(String[] args) 
 	{
+		// add logic to take into consideration the number of star given by the user as well
+		
 		Properties props = new Properties();
 		props.setProperty("annotators", "tokenize, ssplit, parse, sentiment");
 	    StanfordCoreNLP pipeline = new StanfordCoreNLP(props);

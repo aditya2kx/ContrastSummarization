@@ -64,7 +64,7 @@ public class Keywords_Extractor
 	    
 		try
 		{
-			for(int index = -1; index<15 ; index++)
+			for(int index = 1; index<=1 ; index++)
 			{
 				fis = new FileInputStream(filename+index+".out");
 				br = new BufferedReader(new InputStreamReader(fis));
