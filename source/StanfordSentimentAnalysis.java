@@ -58,8 +58,6 @@ public class StanfordSentimentAnalysis
 	    posScore += Double.parseDouble(NF.format(vector.get(4)));
 	    negScore += Double.parseDouble(NF.format(vector.get(0)));
 	    negScore += Double.parseDouble(NF.format(vector.get(1)));
-	    posScore *= 100;
-	    negScore *= 100;
 	    if(posScore >= negScore)
 	    {
 	    	stats.put("class", SentimentClass.Positive);
