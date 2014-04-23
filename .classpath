@@ -15,5 +15,9 @@
 	<classpathentry kind="lib" path="Jars/xom.jar"/>
 	<classpathentry kind="lib" path="Jars/JSON-java-master"/>
 	<classpathentry kind="lib" path="Jars/stanford-corenlp-3.3.1-models.jar"/>
+	<classpathentry kind="lib" path="Jars/commons-codec-1.4.jar"/>
+	<classpathentry kind="lib" path="Jars/scribe-1.1.0.jar"/>
+	<classpathentry kind="lib" path="Jars/jersey-client-1.18.1.jar"/>
+	<classpathentry kind="lib" path="Jars/jersey-core-1.17.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
