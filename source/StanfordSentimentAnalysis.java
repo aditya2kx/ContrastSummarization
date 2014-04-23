@@ -33,9 +33,9 @@ public class StanfordSentimentAnalysis
 	 * StanfordSentimentAnalysis sent = new StanfordSentimentAnalysis();
 		Map<String, Object> stats = sent.getScore(text);
 	 */
-	public Map<String, Object> getScore(String text) 
+	public Map<SentimentClass, Double> getScore(String text) 
 	{
-	    Map<String, Object> stats = new HashMap<String, Object>();
+		Map<SentimentClass, Double> stats = new HashMap<SentimentClass, Double>();
 		Annotation document = new Annotation(text);
 	    pipeline.annotate(document);
 	    List<CoreMap> sentences = document.get(SentencesAnnotation.class);
@@ -58,16 +58,8 @@ public class StanfordSentimentAnalysis
 	    posScore += Double.parseDouble(NF.format(vector.get(4)));
 	    negScore += Double.parseDouble(NF.format(vector.get(0)));
 	    negScore += Double.parseDouble(NF.format(vector.get(1)));
-	    if(posScore >= negScore)
-	    {
-	    	stats.put("class", SentimentClass.Positive);
-	    	stats.put("score", posScore);
-	    }
-	    else
-	    {
-	    	stats.put("class", SentimentClass.Negative);
-	    	stats.put("score", negScore);
-	    }
+	    stats.put(SentimentClass.Positive, posScore);
+    	stats.put(SentimentClass.Negative, negScore);
 	    return stats;
 	}
 }
