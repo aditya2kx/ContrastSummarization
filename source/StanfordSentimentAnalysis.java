@@ -18,16 +18,16 @@ import edu.stanford.nlp.util.CoreMap;
 
 public class StanfordSentimentAnalysis 
 {
-	  private static final NumberFormat NF = new DecimalFormat("0.0000");
-	  Properties props;
-	  StanfordCoreNLP pipeline;
+	private static final NumberFormat NF = new DecimalFormat("0.0000");
+	Properties props;
+	StanfordCoreNLP pipeline;
 	  
-	  public StanfordSentimentAnalysis()
-	  {
-		  props = new Properties();
-		  props.setProperty("annotators", "tokenize, ssplit, parse, sentiment");
-		  pipeline = new StanfordCoreNLP(props);
-	  }
+	public StanfordSentimentAnalysis()
+	{
+		props = new Properties();
+		props.setProperty("annotators", "tokenize, ssplit, parse, sentiment");
+		pipeline = new StanfordCoreNLP(props);
+	}
 	  
 	/* Usage
 	 * StanfordSentimentAnalysis sent = new StanfordSentimentAnalysis();
