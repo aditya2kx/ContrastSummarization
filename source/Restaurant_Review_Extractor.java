@@ -64,6 +64,7 @@ public class Restaurant_Review_Extractor
 				try
 				{
 					String id = json.getString("business_id");
+					int stars = json.getInt("stars");
 					String reviews_content = json.getString("text");
 					if(reviews_content.length()<3)
 					{
@@ -73,7 +74,7 @@ public class Restaurant_Review_Extractor
 					if(business_ids.contains(id))
 					{
 						fos2 = new FileOutputStream(input+"_"+id, true);
-						fos2.write((reviews_content+"\n").getBytes("UTF8"));
+						fos2.write(("{\"stars\":"+stars+",\"text\":\""+reviews_content+"\"}"+"\n").getBytes("UTF8"));
 						fos2.close();
 					}
 				}
