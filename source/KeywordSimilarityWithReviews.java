@@ -82,11 +82,10 @@ public class KeywordSimilarityWithReviews {
 				BufferedReader reader = new BufferedReader(new FileReader(new File(sentencesFile)))){
 			while((readLine = reader.readLine()) != null){
 				//String[] wordsArray = readLine.split("\\s+");
-				totalReviews++;
 				Annotation document = new Annotation(readLine);
 				pipeline.annotate(document);
 				List<CoreMap> sentences = document.get(SentencesAnnotation.class);
-
+				totalReviews += sentences.size();
 				for(CoreMap sentence: sentences)
 				{
 					String review = getReviewSentence(sentence);
