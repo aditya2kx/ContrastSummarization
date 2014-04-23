@@ -22,15 +22,14 @@ public class Restaurant_Review_Extractor
 		
 		try
 		{
-			fis = new FileInputStream("E:\\USC\\Academic\\Natural Language Processing\\Project\\Dataset\\yelp_phoenix_academic_dataset\\yelp_phoenix_academic_dataset");
-			String input = "C:\\Users\\Rockstar\\Google Drive\\Natural Language Processing Project\\Dataset\\Restaurants Reviews Per Restaurant\\Rest_Business";
+			fis = new FileInputStream(args[0]);
+			String input = args[1];
 			fos1 = new FileOutputStream(input);
 			String currentLine = null;
 			br = new BufferedReader(new InputStreamReader(fis));
 			JSONObject json = null;
 			while( (currentLine=br.readLine())!=null)
 			{
-				currentLine.replaceAll("\n", " ");
 				try
 				{
 					json = new JSONObject(currentLine);
