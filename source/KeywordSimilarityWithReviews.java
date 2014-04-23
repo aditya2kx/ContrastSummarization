@@ -36,7 +36,7 @@ public class KeywordSimilarityWithReviews {
 	//private static JaccardSimilarity jc;
 
 	public static void main(String[] args) throws FileNotFoundException, IOException {
-		if(args.length < 2){
+		if(args.length < 3){
 			System.err.println("Usage: KeywordSimilarityWithReviews <keywords-file> <sentences-input-file> <skip-words-list>");
 			System.exit(0);
 		}
