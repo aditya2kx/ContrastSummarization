@@ -76,10 +76,13 @@ public class KeywordSimilarityWithReviews {
 
 		//sentences file
 		//"keyword_training_sentences_file_test"
+		int totalReviews = 0;
+		int categoryReviews = 0;
 		try(BufferedWriter writer = new BufferedWriter(new FileWriter(new File(outputFile)));
 				BufferedReader reader = new BufferedReader(new FileReader(new File(sentencesFile)))){
 			while((readLine = reader.readLine()) != null){
 				//String[] wordsArray = readLine.split("\\s+");
+				totalReviews++;
 				Annotation document = new Annotation(readLine);
 				pipeline.annotate(document);
 				List<CoreMap> sentences = document.get(SentencesAnnotation.class);
@@ -88,16 +91,19 @@ public class KeywordSimilarityWithReviews {
 				{
 					String review = getReviewSentence(sentence);
 					if(review != null){
-						writer.write(review);;
-						writer.write("\n");;
+						writer.write(review);
+						writer.write("\n");
+						categoryReviews++;
 					}
 				}
 			}
 		}
+		
+		System.out.println("Total Reviews: " + totalReviews);
+		System.out.println("Category Wise Reviews: " + categoryReviews);
 	}
 
 	private static String getReviewSentence(CoreMap sentence){
-		System.out.println(sentence.toString());
 		Map<Integer, List<String>> ngramMap = new HashMap<>();
 		List<CoreLabel> coreLabelList = sentence.get(TokensAnnotation.class);
 		ngramMap.put(1, getUnigrams(coreLabelList));
