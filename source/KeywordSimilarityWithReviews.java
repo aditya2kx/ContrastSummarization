@@ -100,6 +100,7 @@ public class KeywordSimilarityWithReviews {
 		
 		System.out.println("Total Reviews: " + totalReviews);
 		System.out.println("Category Wise Reviews: " + categoryReviews);
+		System.out.println("Percentage of Category Wise Reviews: " + (categoryReviews * 100.0/totalReviews)+"%");
 	}
 
 	private static String getReviewSentence(CoreMap sentence){
