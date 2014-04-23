@@ -30,6 +30,7 @@ public class Restaurant_Review_Extractor
 			JSONObject json = null;
 			while( (currentLine=br.readLine())!=null)
 			{
+				currentLine.replaceAll("\n", " ");
 				try
 				{
 					json = new JSONObject(currentLine);
