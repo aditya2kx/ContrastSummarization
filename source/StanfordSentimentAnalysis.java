@@ -2,8 +2,9 @@ package source;
 import java.io.PrintStream;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import org.ejml.simple.SimpleMatrix;
@@ -27,7 +28,16 @@ import edu.stanford.nlp.util.Generics;
 public class StanfordSentimentAnalysis 
 {
 	  private static final NumberFormat NF = new DecimalFormat("0.0000");
-
+	  Properties props;
+	  StanfordCoreNLP pipeline;
+	  
+	  public StanfordSentimentAnalysis()
+	  {
+		  props = new Properties();
+		  props.setProperty("annotators", "tokenize, ssplit, parse, sentiment");
+		  pipeline = new StanfordCoreNLP(props);
+	  }
+	  
 	  static enum Output {
 	    PENNTREES, VECTORS, ROOT, PROBABILITIES
 	  }
@@ -112,10 +122,10 @@ public class StanfordSentimentAnalysis
 	      out.print("  " + NF.format(vector.get(i)));
 	    }
 	    out.println();
-	    index++;
+	    /*index++;
 	    for (Tree child : tree.children()) {
 	      index = outputTreeScores(out, child, index);
-	    }
+	    }*/
 	    return index;
 	  }
 
@@ -144,9 +154,9 @@ public class StanfordSentimentAnalysis
 	        break;
 	      }
 	      case PROBABILITIES: {
-	        Tree copy = tree.deepCopy();
-	        setIndexLabels(copy, 0);
-	        out.println(copy);
+	        //Tree copy = tree.deepCopy();
+	        //setIndexLabels(copy, 0);
+	        //out.println(copy);
 	        outputTreeScores(out, tree, 0);
 	        break;
 	      }
@@ -198,27 +208,47 @@ public class StanfordSentimentAnalysis
 	      throw new IllegalArgumentException("Unknown format " + inputFormat);
 	    }
 	  }
-	
-	public static void main(String[] args) 
+	/* Usage
+	 * StanfordSentimentAnalysis sent = new StanfordSentimentAnalysis();
+		Map<String, Object> stats = sent.getScore(text);
+	 */
+	public Map<String, Object> getScore(String text) 
 	{
-		// add logic to take into consideration the number of star given by the user as well
-		
-		Properties props = new Properties();
-		props.setProperty("annotators", "tokenize, ssplit, parse, sentiment");
-	    StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
-	    String text = "I just had their white pizza today and topped it with the tiramisu.";
-	    List<Output> outputFormats = Arrays.asList(new Output[] { Output.ROOT });
-	    
-	    
-	    Annotation document = new Annotation(text);
-	    
+	    Map<String, Object> stats = new HashMap<String, Object>();
+		Annotation document = new Annotation(text);
 	    pipeline.annotate(document);
-	    
 	    List<CoreMap> sentences = document.get(SentencesAnnotation.class);
-	    for(CoreMap sentence: sentences) 
+	    if(sentences.size()!=1)
 	    {
-	    	outputTree(System.out, sentence, outputFormats);
-	    	System.out.println();
+	    	System.out.println("Input text is not 1 sentence");
+	    	System.exit(1);
 	    }
+	    CoreMap sentence = sentences.get(0); 
+	    Tree tree = sentence.get(SentimentCoreAnnotations.AnnotatedTree.class);
+	    if (tree.isLeaf()) 
+	    {
+	    	System.out.println("Input text has improper format");
+	    	System.exit(1);
+	    }
+	    SimpleMatrix vector = RNNCoreAnnotations.getPredictions(tree);
+	    double posScore = 0;
+	    double negScore = 0;
+	    posScore += Double.parseDouble(NF.format(vector.get(3)));
+	    posScore += Double.parseDouble(NF.format(vector.get(4)));
+	    negScore += Double.parseDouble(NF.format(vector.get(0)));
+	    negScore += Double.parseDouble(NF.format(vector.get(1)));
+	    posScore *= 100;
+	    negScore *= 100;
+	    if(posScore >= negScore)
+	    {
+	    	stats.put("class", SentimentClass.Positive);
+	    	stats.put("score", posScore);
+	    }
+	    else
+	    {
+	    	stats.put("class", SentimentClass.Negative);
+	    	stats.put("score", negScore);
+	    }
+	    return stats;
 	}
 }
