@@ -25,7 +25,7 @@ public class SentimentAnalyser
 			while((currentLine = br.readLine())!=null)
 			{
 				fos.write((EnsembledSentimentAnalyzer.getSentimentClass(currentLine)+
-						" "+currentLine).getBytes("UTF8"));
+						" "+currentLine + "\n").getBytes("UTF8"));
 			}
 			fos.close();
 			fis.close();

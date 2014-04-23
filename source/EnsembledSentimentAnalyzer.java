@@ -12,16 +12,23 @@ import org.json.JSONObject;
 public class EnsembledSentimentAnalyzer {
 	
 	private static StanfordSentimentAnalysis stanfordSentiAnalyzer;
+	private static double ratingScoreUtil[];
 	
 	static{
 		stanfordSentiAnalyzer = new StanfordSentimentAnalysis();
+		ratingScoreUtil = new double[6];
+		ratingScoreUtil[0] = -500;
+		ratingScoreUtil[1] = -1;
+		ratingScoreUtil[2] = -0.5;
+		ratingScoreUtil[3] = 0;
+		ratingScoreUtil[4] = 0.5;
+		ratingScoreUtil[5] = 1;
 	}
 
 	public static SentimentClass getSentimentClass(String reviewJsonString) throws UnsupportedEncodingException{
 		JSONObject jsonObj = new JSONObject(reviewJsonString);
 		String review = jsonObj.getString("text");
-		double ratingScore =  (double) ((((2 * jsonObj.getInt("stars") - 5 )
-				+ 80) * (double) (10/9)) - 100)/100;
+		double ratingScore = ratingScoreUtil[jsonObj.getInt("stars")];
 		
 		//Splat Service
 		Map<SentimentClass, Double> splatSentiMap = SplatService.getSentimentValues(review);
@@ -36,7 +43,8 @@ public class EnsembledSentimentAnalyzer {
 		double stanfordFinalScore = stanfordPosScore - stanfordNegScore;
 		
 		
-		double ensembledScore = 0.4 * splatFinalScore + 0.3 * stanfordFinalScore + 0.3 * ratingScore;
+		double ensembledScore = 0.25 * splatFinalScore + 0.25 * stanfordFinalScore + 0.5 * ratingScore;
+
 		if(ensembledScore >= -0.05 && ensembledScore <= 0.05){
 			return Neutral;
 		}else if(ensembledScore > 0.05){
@@ -46,5 +54,10 @@ public class EnsembledSentimentAnalyzer {
 		}
 		
 		return null;
+	}
+	public static void main(String[] args) throws UnsupportedEncodingException
+	{
+		System.out.println(EnsembledSentimentAnalyzer.getSentimentClass("{\"stars\":5,\"text\":\"In fact, I've been now 3 times before writing this review as I wanted to make sure my 'best pizza' claim was true.\"}")
+				+" "+"In fact, I've been now 3 times before writing this review as I wanted to make sure my 'best pizza' claim was true.");
 	}
 }

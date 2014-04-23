@@ -86,6 +86,7 @@ public class KeywordSimilarityWithReviews {
 		try(BufferedWriter writer = new BufferedWriter(new FileWriter(new File(outputFile)));
 				BufferedReader reader = new BufferedReader(new FileReader(new File(sentencesFile)))){
 			while((readLine = reader.readLine()) != null){
+				System.out.println(readLine);
 				jsonObject = new JSONObject(readLine);
 				reviewText = jsonObject.getString("text");
 				rating = jsonObject.getInt("stars");
