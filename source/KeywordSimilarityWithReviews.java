@@ -14,6 +14,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import org.json.JSONObject;
+
 import uk.ac.shef.wit.simmetrics.similaritymetrics.JaroWinkler;
 import uk.ac.shef.wit.simmetrics.similaritymetrics.Levenshtein;
 import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
@@ -78,19 +80,25 @@ public class KeywordSimilarityWithReviews {
 		//"keyword_training_sentences_file_test"
 		int totalReviews = 0;
 		int categoryReviews = 0;
+		JSONObject jsonObject;
+		String reviewText;
+		int rating;
 		try(BufferedWriter writer = new BufferedWriter(new FileWriter(new File(outputFile)));
 				BufferedReader reader = new BufferedReader(new FileReader(new File(sentencesFile)))){
 			while((readLine = reader.readLine()) != null){
-				//String[] wordsArray = readLine.split("\\s+");
-				Annotation document = new Annotation(readLine);
+				jsonObject = new JSONObject(readLine);
+				reviewText = jsonObject.getString("text");
+				rating = jsonObject.getInt("stars");
+				
+				Annotation document = new Annotation(reviewText);
 				pipeline.annotate(document);
 				List<CoreMap> sentences = document.get(SentencesAnnotation.class);
 				totalReviews += sentences.size();
 				for(CoreMap sentence: sentences)
 				{
-					String review = getReviewSentence(sentence);
-					if(review != null){
-						writer.write(review);
+					String outputReview = getReviewSentence(sentence);
+					if(outputReview != null){
+						writer.write(getJsonString(rating, outputReview));
 						writer.write("\n");
 						categoryReviews++;
 					}
@@ -101,6 +109,14 @@ public class KeywordSimilarityWithReviews {
 		System.out.println("Total Reviews: " + totalReviews);
 		System.out.println("Category Wise Reviews: " + categoryReviews);
 		System.out.println("Percentage of Category Wise Reviews: " + (categoryReviews * 100.0/totalReviews)+"%");
+	}
+	
+	private static String getJsonString(int stars, String reviewText){
+		JSONObject jsonObj = new JSONObject();
+		jsonObj.put("stars", stars);
+		jsonObj.put("text", reviewText);
+		
+		return jsonObj.toString();
 	}
 
 	private static String getReviewSentence(CoreMap sentence){
