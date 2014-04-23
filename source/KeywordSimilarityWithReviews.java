@@ -31,11 +31,13 @@ public class KeywordSimilarityWithReviews {
 	private static JaroWinkler jaroWinkler;
 
 	private static Levenshtein levenshtein;
+	
+	private static Set<String> skipWordsSet;
 	//private static JaccardSimilarity jc;
 
 	public static void main(String[] args) throws FileNotFoundException, IOException {
 		if(args.length < 2){
-			System.err.println("Usage: KeywordSimilarityWithReviews <keywords-file> <sentences-input-file>");
+			System.err.println("Usage: KeywordSimilarityWithReviews <keywords-file> <sentences-input-file> <skip-words-list>");
 			System.exit(0);
 		}
 
@@ -48,6 +50,7 @@ public class KeywordSimilarityWithReviews {
 		String keywordsFile = args[0];//"aggregate_keywords_file.txt";
 		//String sentencesFile = "yelp_phoenix_academic_dataset.rest_reviews_split";
 		String sentencesFile = args[1];//"TestFile";
+		String skipWordsFile = args[2];
 		String outputFile = args[1]+".out";
 
 		String readLine;
@@ -56,6 +59,14 @@ public class KeywordSimilarityWithReviews {
 		try(BufferedReader reader = new BufferedReader(new FileReader(new File(keywordsFile)))){
 			while((readLine = reader.readLine()) != null){
 				keywordSet.add(readLine);
+			}
+		}
+		
+		//Read the skip words
+		skipWordsSet = new HashSet<>();
+		try(BufferedReader reader = new BufferedReader(new FileReader(new File(skipWordsFile)))){
+			while((readLine = reader.readLine()) != null){
+				skipWordsSet.add(readLine);
 			}
 		}
 
@@ -102,7 +113,8 @@ public class KeywordSimilarityWithReviews {
 			}
 
 			for(String term : ngramsList){
-				if(Character.toLowerCase(term.charAt(0)) == Character.toLowerCase(keyword.charAt(0))){
+				if(Character.toLowerCase(term.charAt(0)) == Character.toLowerCase(keyword.charAt(0)) 
+						&& !skipWordsSet.contains(term.toLowerCase())){
 					float score = levenshtein.getSimilarity(keyword, term);
 					if(score >= 0.8){
 						return sentence.toString() + "->->" + keyword + "->->" + score;
