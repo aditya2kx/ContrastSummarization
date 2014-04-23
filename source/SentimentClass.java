@@ -1,5 +1,5 @@
 package source;
 
 public enum SentimentClass {
-	Positive, Negative;
+	Positive, Negative, Neutral;
 }

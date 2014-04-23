@@ -139,7 +139,7 @@ public class KeywordSimilarityWithReviews {
 						&& !skipWordsSet.contains(term.toLowerCase())){
 					float score = levenshtein.getSimilarity(keyword, term);
 					if(score >= 0.8){
-						return sentence.toString() + "->->" + keyword + "->->" + score;
+						return sentence.toString();// + "->->" + keyword + "->->" + score;
 					}
 				}
 			}

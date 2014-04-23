@@ -1,5 +1,8 @@
 package source;
 
+import static source.SentimentClass.Positive;
+import static source.SentimentClass.Negative;
+
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.HashMap;
@@ -17,20 +20,32 @@ public class SplatService {
 	public static final String CLASSIFICATION = "Classification";
 
 	public static void main(String[] args) throws UnsupportedEncodingException {
-		Map<String, String> sentimentValues = getSentimentValues("I hate this place!!!");
-		System.out.println(sentimentValues.get(CLASSIFICATION));
+		Map<SentimentClass, Double> sentimentValues = getSentimentValues("I hate this place!!!");
+		System.out.println(sentimentValues.get(Positive));
+		System.out.println(sentimentValues.get(Negative));
 		
 	}
 	
-	public static Map<String, String> getSentimentValues(String reviewText) throws UnsupportedEncodingException{
+	public static Map<SentimentClass, Double> getSentimentValues(String reviewText) throws UnsupportedEncodingException{
 		String sentimentResponse = getSentimentResponse(reviewText);
 		JSONArray jsonArr = new JSONArray(sentimentResponse);
 		JSONObject jsonObj  = (JSONObject) jsonArr.get(0);
 		JSONObject valObj =  jsonObj.getJSONObject("Value");
 		
-		Map<String, String> sentimentValuesMap = new HashMap<>();
-		sentimentValuesMap.put(CLASSIFICATION, String.valueOf(valObj.get(CLASSIFICATION)));
-		sentimentValuesMap.put(PROBABILITY, String.valueOf(valObj.get(PROBABILITY)));
+		Map<SentimentClass, Double> sentimentValuesMap = new HashMap<>();
+		String splatClassification = String.valueOf(valObj.get(CLASSIFICATION));
+		Double splatSentiScore = Double.valueOf(valObj.get(PROBABILITY).toString());
+		double splatPosScore, splatNegScore;
+		if(splatClassification.equals("pos")){
+			splatPosScore = splatSentiScore;
+			splatNegScore = 1 - splatSentiScore;
+		}else{
+			splatNegScore = splatSentiScore;
+			splatPosScore = 1 - splatSentiScore;
+		}
+			
+		sentimentValuesMap.put(Positive, splatPosScore);
+		sentimentValuesMap.put(Negative, splatNegScore);
 		return sentimentValuesMap;
 	}
 
