@@ -66,9 +66,9 @@ public class Restaurant_Review_Extractor
 					String id = json.getString("business_id");
 					int stars = json.getInt("stars");
 					String reviews_content = json.getString("text");
-					reviews_content.replaceAll("\n|\r", " ");
-					reviews_content.replaceAll("\"", "'");
-					reviews_content.replaceAll("\\.\\.+", ".");
+					reviews_content = reviews_content.replaceAll("\n|\r", " ");
+					reviews_content = reviews_content.replaceAll("\"", "'");
+					reviews_content = reviews_content.replaceAll("\\.\\.+", ".");
 					
 					if(reviews_content.length()<3)
 					{
