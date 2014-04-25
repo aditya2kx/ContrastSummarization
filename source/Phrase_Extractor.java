@@ -12,6 +12,7 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
@@ -30,14 +31,13 @@ import edu.stanford.nlp.util.CoreMap;
 
 public class Phrase_Extractor 
 {
-	private static Set<String> keywordSet;
-	private static Levenshtein levenshtein;
-	public static void phraseExtract(Tree t,OutputStream out) throws UnsupportedEncodingException, IOException
-	{
-		List<Tree> leaves = t.getLeaves();
-		ArrayList<String> nounWordTags = new ArrayList<>();
-		ArrayList<String> nounPhraseTags = new ArrayList<>();
-		ArrayList<String> rule1PhraseTags = new ArrayList<>();
+
+	private static List<String> nounWordTags = new ArrayList<>();
+	private static List<String> nounPhraseTags = new ArrayList<>();
+	private static List<String> rule1PhraseTags = new ArrayList<>();
+	private static List<String> conjunctionPhraseTags = new ArrayList<>();
+
+	static {
 		nounWordTags.add("NN");
 		nounWordTags.add("NNS");
 		nounWordTags.add("NNP");
@@ -45,13 +45,26 @@ public class Phrase_Extractor
 		nounPhraseTags.add("NP");
 		rule1PhraseTags.add("ADJP");
 		rule1PhraseTags.add("VP");
+		conjunctionPhraseTags.add("CC");
+		conjunctionPhraseTags.add("CONJP");
+	}
+
+	private static Set<String> keywordSet;
+	private static Levenshtein levenshtein;
+	public static void phraseExtract(Tree t, OutputStream out1, OutputStream out2, OutputStream out3) throws UnsupportedEncodingException, IOException
+	{
+		List<Tree> leaves = t.getLeaves();
+
 		Tree parent = null;
+		boolean matchFound = false;
+		boolean containsInList = false;
+		StringBuffer buffer = new StringBuffer();
 		for(Tree leaf : leaves)
 		{
 			parent = leaf.parent(t);
 			String term = leaf.label().toString();
-			boolean containsInList = false;
-			
+			containsInList = false;
+			matchFound = false;
 			for(String keyword : keywordSet)
 			{
 				if(Character.toLowerCase(term.charAt(0)) == Character.toLowerCase(keyword.charAt(0)))
@@ -64,6 +77,7 @@ public class Phrase_Extractor
 					}
 				}				
 			}
+
 			if(containsInList && 
 					nounWordTags.contains(parent.label().toString()))
 			{
@@ -75,25 +89,90 @@ public class Phrase_Extractor
 					{
 						if(rule1PhraseTags.contains(sibling.label().toString()))
 						{
-							parent = parent.parent(t);
-							//String check = parent.label().toString();
-							//System.out.println(check);
-							List<Tree> l = parent.getLeaves();
-							out.write((l.toString()+"\n").getBytes("UTF8"));
+							//Set the ADJ/VP flag as found
+							matchFound = true;
 							break;
 						}
 					}
 				}
+
+				//Generate the sentence
+				if(matchFound){
+					parent = parent.parent(t);
+					Iterator<Tree> matchSiblingsIter = parent.getChildrenAsList().iterator();
+					boolean foundConjuction = false;
+					if(matchSiblingsIter.hasNext() && !foundConjuction){
+						Tree child = matchSiblingsIter.next();
+						if(conjunctionPhraseTags.contains(child.label().toString()))
+						{
+							foundConjuction = true;
+						}
+						else{
+							buffer.append(getLeavesAsString(child.getLeaves()));
+						}
+					}
+
+					while(matchSiblingsIter.hasNext() && !foundConjuction){
+						Tree child = matchSiblingsIter.next();
+						if(conjunctionPhraseTags.contains(child.label().toString()))
+						{
+							foundConjuction = true;
+						}
+						else{
+							buffer.append(" ").append(getLeavesAsString(child.getLeaves()));
+						}
+					}
+
+					out2.write(buffer.toString().getBytes());
+					out2.write("\n".getBytes());
+				}else{
+					//Rule 4. Look for ADJ/VP
+					parent = parent.parent(t);
+					while(parent != null){
+						if(rule1PhraseTags.contains(parent.label().toString())){
+							String leavesAsString = getLeavesAsString(parent.getLeaves());
+							out3.write(leavesAsString.getBytes());
+							out3.write("\n".getBytes());;
+							buffer.append(leavesAsString);
+							break;
+						}
+
+						parent = parent.parent(t);
+					}
+				}
+
+				if(buffer.length() > 0){
+					out1.write(buffer.toString().getBytes());
+					out1.write("\n".getBytes());
+				}
+				buffer.setLength(0);
 			}
-			//System.out.println(parent.label().toString());
+
 		}
 	}
-	
+
+	/**
+	 * Return the sentence for the leaves
+	 * 
+	 * @param leaves
+	 * @return
+	 */
+	private static String getLeavesAsString(List<Tree> leaves){
+		Iterator<Tree> iter = leaves.iterator();
+		StringBuffer buffer = new StringBuffer();
+		if(iter.hasNext()){
+			buffer.append(iter.next().label().toString());
+		}
+
+		while(iter.hasNext()){
+			buffer.append(" ").append(iter.next().label().toString());
+		}
+
+		return buffer.toString();
+	}
+
 	public static void main(String[] args)
 	{
-		FileInputStream fis = null;
-		FileOutputStream fos = null;
-		BufferedReader br = null;
 		Properties props;
 		//LexicalizedParserQuery myParserQuery;
 		StanfordCoreNLP pipeline;
@@ -104,11 +183,9 @@ public class Phrase_Extractor
 		pipeline = new StanfordCoreNLP(props);
 		levenshtein = new Levenshtein();
 		//System.out.println(LexicalizedParser.DEFAULT_PARSER_LOC);
-		
+
 		try
 		{
-			fis = new FileInputStream(args[0]);
-			fos = new FileOutputStream(args[0]+".phrases");
 			String readLine;
 			keywordSet = new HashSet<>();
 			//keywords file
@@ -118,28 +195,33 @@ public class Phrase_Extractor
 				}
 			}
 			String currentLine = null;
-			br = new BufferedReader(new InputStreamReader(fis));
-			JSONObject json = null;
-			while( (currentLine=br.readLine())!=null)
-			{
-				try
+
+			try(BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(new File(args[0]))));
+					FileOutputStream fos = new FileOutputStream(args[0]+".phrases");
+					FileOutputStream fos_rule1 = new FileOutputStream(args[0]+".phrases.rule1");
+					FileOutputStream fos_rule2 = new FileOutputStream(args[0]+".phrases.rule2")){
+				JSONObject json = null;
+				while( (currentLine=br.readLine())!=null)
 				{
-					json = new JSONObject(currentLine);
+					try
+					{
+						json = new JSONObject(currentLine);
+					}
+					catch(JSONException e)
+					{
+						System.out.println("Line: "+currentLine+" not a json object");
+						System.exit(1);
+					}
+					String text = json.getString("text");
+					document = new Annotation(text);
+					pipeline.annotate(document);
+					List<CoreMap> sentences = document.get(SentencesAnnotation.class);
+					CoreMap sentence = sentences.get(0);
+					Tree tree = sentence.get(TreeAnnotation.class);
+					//List<Tree> leaves = tree.getLeaves();
+					//tree.indentedListPrint();
+					phraseExtract(tree, fos, fos_rule1, fos_rule2);
 				}
-				catch(JSONException e)
-				{
-					System.out.println("Line: "+currentLine+" not a json object");
-					System.exit(1);
-				}
-				String text = json.getString("text");
-				document = new Annotation(text);
-				pipeline.annotate(document);
-				List<CoreMap> sentences = document.get(SentencesAnnotation.class);
-				CoreMap sentence = sentences.get(0);
-				Tree tree = sentence.get(TreeAnnotation.class);
-				//List<Tree> leaves = tree.getLeaves();
-				//tree.indentedListPrint();
-				phraseExtract(tree, fos);
 			}
 		}
 		catch(FileNotFoundException e)
