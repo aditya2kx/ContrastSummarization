@@ -23,6 +23,7 @@ public class LTCGenerator {
 		documentTermsMap = new ArrayList<>();
 		termToIndexMap = new HashMap<>();
 		inverseDocumentFreqMap = new HashMap<>();
+		stopWordsSet = Utils.getStopWords();
 		
 		Set<String> termsList = getUniqueTerms(sentencesList);
 		int count = 0;
@@ -31,8 +32,6 @@ public class LTCGenerator {
 		}
 		
 		featureVector = new double[termsList.size()][sentencesList.size()];
-		
-		stopWordsSet = Utils.getStopWords();
 	}
 
 	private Set<String> getUniqueTerms(List<String> sentencesList){
