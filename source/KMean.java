@@ -42,6 +42,7 @@ public class KMean
 			for(int sentenceIndex = 0; sentenceIndex < numberOfSentences; sentenceIndex++)
 			{
 					previousClusters[clusterIndex][sentenceIndex] = -1;
+					clusters[clusterIndex][sentenceIndex] = -2;
 			}
 		}
 	}
@@ -85,30 +86,39 @@ public class KMean
 			for ( int clusterCenterIndex = 0; clusterCenterIndex < K; clusterCenterIndex++)
 			{              
 				distanceFromClusterCenter[clusterCenterIndex] = 0;
+				float clusterCenterMod = 0;
+				float vectorMod = 0;
 				for(int featureIndex = 0; featureIndex < numberOfFeatures; featureIndex++)
 				{
 					distanceFromClusterCenter[clusterCenterIndex] += 
-							((clusterCenters[clusterCenterIndex][featureIndex]-vectorList[sentenceIndex][featureIndex])
-							*
-							(clusterCenters[clusterCenterIndex][featureIndex]-vectorList[sentenceIndex][featureIndex]));
+							(clusterCenters[clusterCenterIndex][featureIndex] * 
+									vectorList[sentenceIndex][featureIndex]);
+					
+					clusterCenterMod += clusterCenters[clusterCenterIndex][featureIndex] *
+											clusterCenters[clusterCenterIndex][featureIndex];
+					
+					vectorMod += vectorList[sentenceIndex][featureIndex] *
+										vectorList[sentenceIndex][featureIndex];
 				}
-				distanceFromClusterCenter[clusterCenterIndex] = (float) Math.sqrt(distanceFromClusterCenter[clusterCenterIndex]);
+				clusterCenterMod = (float) Math.sqrt(clusterCenterMod);
+				vectorMod = (float) Math.sqrt(vectorMod);
+				distanceFromClusterCenter[clusterCenterIndex] /= (clusterCenterMod * vectorMod);
 			}
 			// find minimum distance index cluster no 't'
-			int minimumDistanceIndex = 0;
-			double minimumDistance = distanceFromClusterCenter[0];   
+			int maximumDistanceIndex = 0;
+			float maximumDistance = distanceFromClusterCenter[0];   
 			for ( int clusterCenterIndex = 0; clusterCenterIndex < K; clusterCenterIndex++)                  
 			{
-				if(minimumDistance > distanceFromClusterCenter[clusterCenterIndex])
+				if(maximumDistance < distanceFromClusterCenter[clusterCenterIndex])
 				{
-					minimumDistanceIndex = clusterCenterIndex;
-					minimumDistance = distanceFromClusterCenter[clusterCenterIndex];
+					maximumDistanceIndex = clusterCenterIndex;
+					maximumDistance = distanceFromClusterCenter[clusterCenterIndex];
 				}
 			}
 			
 			//store sentence in proper cluster and increment cluster size
-			clusters[minimumDistanceIndex][clusterCount[minimumDistanceIndex]] = sentenceIndex;
-			clusterCount[minimumDistanceIndex]++;
+			clusters[maximumDistanceIndex][clusterCount[maximumDistanceIndex]] = sentenceIndex;
+			clusterCount[maximumDistanceIndex]++;
 		}    
 
 		for(int clusterCenterIndex = 0; clusterCenterIndex < K; clusterCenterIndex++)
