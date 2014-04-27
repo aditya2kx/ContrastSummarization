@@ -13,7 +13,7 @@ public class LTCGenerator {
 
 	private double[][] featureVector;
 
-	private Set<String> skipWordsSet;
+	private Set<String> stopWordsSet;
 
 	private List<Map<String, Integer>> documentTermsMap;
 	
@@ -31,6 +31,8 @@ public class LTCGenerator {
 		}
 		
 		featureVector = new double[termsList.size()][sentencesList.size()];
+		
+		stopWordsSet = Utils.getStopWords();
 	}
 
 	private Set<String> getUniqueTerms(List<String> sentencesList){
@@ -42,7 +44,7 @@ public class LTCGenerator {
 			termsMap = new HashMap<>();
 			split = sentence.split("\\s+");
 			for(String term : split){
-				if(!skipWordsSet.contains(term) && !term.matches("[^a-zA-Z0-9]+")){
+				if(!stopWordsSet.contains(term) && !term.matches("[^a-zA-Z0-9]+")){
 					val = 0;
 					if(termsMap.containsKey(term)){
 						val = termsMap.get(term);
