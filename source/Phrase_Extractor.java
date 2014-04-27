@@ -11,6 +11,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -51,18 +52,20 @@ public class Phrase_Extractor
 
 	private static Set<String> keywordSet;
 	private static Levenshtein levenshtein;
-	public static void phraseExtract(Tree t, OutputStream out1, OutputStream out2, OutputStream out3) throws UnsupportedEncodingException, IOException
+	public static void phraseExtract_approach1(Tree rootNode, OutputStream out1) throws UnsupportedEncodingException, IOException
 	{
-		List<Tree> leaves = t.getLeaves();
+		List<Tree> termLeaves = rootNode.getLeaves();
 
-		Tree parent = null;
-		boolean matchFound = false;
-		boolean containsInList = false;
+		Tree parentNode = null, currentLeafNode;
+		boolean matchFound = false, containsInList = false;
+		String term, leavesAsString;
+		List<Tree> childLeavesSubList;
 		StringBuffer buffer = new StringBuffer();
-		for(Tree leaf : leaves)
+		for(int index = 0; index < termLeaves.size(); index++)
 		{
-			parent = leaf.parent(t);
-			String term = leaf.label().toString();
+			currentLeafNode = termLeaves.get(index);
+			parentNode = currentLeafNode.parent(rootNode);
+			term = currentLeafNode.label().toString();
 			containsInList = false;
 			matchFound = false;
 			for(String keyword : keywordSet)
@@ -79,12 +82,12 @@ public class Phrase_Extractor
 			}
 
 			if(containsInList && 
-					nounWordTags.contains(parent.label().toString()))
+					nounWordTags.contains(parentNode.label().toString()))
 			{
-				parent = parent.parent(t);
-				if(nounPhraseTags.contains(parent.label().toString()))
+				parentNode = parentNode.parent(rootNode);
+				if(nounPhraseTags.contains(parentNode.label().toString()))
 				{
-					List<Tree> siblings = parent.siblings(t);
+					List<Tree> siblings = parentNode.siblings(rootNode);
 					for(Tree sibling : siblings)
 					{
 						if(rule1PhraseTags.contains(sibling.label().toString()))
@@ -98,8 +101,8 @@ public class Phrase_Extractor
 
 				//Generate the sentence
 				if(matchFound){
-					parent = parent.parent(t);
-					Iterator<Tree> matchSiblingsIter = parent.getChildrenAsList().iterator();
+					parentNode = parentNode.parent(rootNode);
+					Iterator<Tree> matchSiblingsIter = parentNode.getChildrenAsList().iterator();
 					boolean foundConjuction = false;
 					if(matchSiblingsIter.hasNext() && !foundConjuction){
 						Tree child = matchSiblingsIter.next();
@@ -108,7 +111,9 @@ public class Phrase_Extractor
 							foundConjuction = true;
 						}
 						else{
-							buffer.append(getLeavesAsString(child.getLeaves()));
+							childLeavesSubList = child.getLeaves();
+							index = getNewIndex(termLeaves, childLeavesSubList);
+							buffer.append(getLeavesAsString(childLeavesSubList));
 						}
 					}
 
@@ -119,36 +124,66 @@ public class Phrase_Extractor
 							foundConjuction = true;
 						}
 						else{
-							buffer.append(" ").append(getLeavesAsString(child.getLeaves()));
+							childLeavesSubList = child.getLeaves();
+							index = getNewIndex(termLeaves, childLeavesSubList);
+							buffer.append(" ").append(getLeavesAsString(childLeavesSubList));
 						}
 					}
 
-					out2.write(buffer.toString().getBytes());
-					out2.write("\n".getBytes());
+					//out1.write(("---> " + buffer.toString()).getBytes());
+					//out1.write("\n".getBytes());
 				}else{
 					//Rule 4. Look for ADJ/VP
-					parent = parent.parent(t);
-					while(parent != null){
-						if(rule1PhraseTags.contains(parent.label().toString())){
-							String leavesAsString = getLeavesAsString(parent.getLeaves());
-							out3.write(leavesAsString.getBytes());
-							out3.write("\n".getBytes());;
-							buffer.append(leavesAsString);
+					//childLeavesSubList = parentNode.getLeaves();
+					//index = getNewIndex(termLeaves, childLeavesSubList);
+					//buffer.append(getLeavesAsString(childLeavesSubList));
+					parentNode = parentNode.parent(rootNode);
+					boolean foundRBSibling = false;
+					while(parentNode != null){
+						if(rule1PhraseTags.contains(parentNode.label().toString())){
+
+							List<Tree> siblings = parentNode.siblings(rootNode);
+							for(Tree sibling : siblings){
+								if(sibling.label().toString().equals("RB")){
+									foundRBSibling = true;
+									break;
+								}
+							}
+
+							if(foundRBSibling){
+								childLeavesSubList = parentNode.parent(rootNode).getLeaves();
+								index = getNewIndex(termLeaves, childLeavesSubList);
+								buffer.append(getLeavesAsString(childLeavesSubList));
+							}else{
+								childLeavesSubList = parentNode.getLeaves();
+								leavesAsString = getLeavesAsString(childLeavesSubList);
+								index = getNewIndex(termLeaves, childLeavesSubList);
+								//out1.write(("---> " + leavesAsString).getBytes());
+								//out1.write("\n".getBytes());;
+								buffer.append(leavesAsString);
+							}
+
 							break;
 						}
 
-						parent = parent.parent(t);
+						parentNode = parentNode.parent(rootNode);
 					}
 				}
 
 				if(buffer.length() > 0){
-					out1.write(buffer.toString().getBytes());
+					out1.write(("---> " + buffer.toString()).getBytes());
 					out1.write("\n".getBytes());
 				}
 				buffer.setLength(0);
 			}
 
 		}
+	}
+
+	private static int getNewIndex(List<Tree> termLeaves,
+			List<Tree> childLeavesSubList) {
+		int subListIndex = Collections.indexOfSubList(termLeaves, childLeavesSubList);
+		return subListIndex + childLeavesSubList.size() - 1;
 	}
 
 	/**
@@ -220,7 +255,11 @@ public class Phrase_Extractor
 					Tree tree = sentence.get(TreeAnnotation.class);
 					//List<Tree> leaves = tree.getLeaves();
 					//tree.indentedListPrint();
-					phraseExtract(tree, fos, fos_rule1, fos_rule2);
+					//phraseExtract(tree, fos, fos_rule1, fos_rule2);
+					fos.write(text.getBytes());
+					fos.write("\n".getBytes());
+					phraseExtract_approach1(tree, fos);
+					//phraseExtract(tree, fos);
 				}
 			}
 		}
@@ -236,5 +275,71 @@ public class Phrase_Extractor
 		{
 			e.printStackTrace();
 		}
+	}
+
+	public static void phraseExtract(Tree tree, OutputStream fos) throws IOException{
+		List<Tree> subTrees = tree.getChildrenAsList();
+		List<Tree> childLeaves;
+		String leavesAsString;
+		for(Tree parentTree : subTrees){
+			if(parentTree.label().toString().equals("S")){
+				List<Tree> childrenTrees = parentTree.getChildrenAsList();
+				if(containsSubjectChildren(childrenTrees)){
+					for(Tree childTree : childrenTrees){
+						if(containsKeywordMatch(childTree)){
+							childLeaves = childTree.getLeaves();
+							leavesAsString = getLeavesAsString(childLeaves);
+							fos.write(("---> " + leavesAsString).getBytes());
+							fos.write("\n".getBytes());
+						}
+					}
+				}else{
+					if(containsKeywordMatch(parentTree)){
+						childLeaves = parentTree.getLeaves();
+						leavesAsString = getLeavesAsString(childLeaves);
+						fos.write(("---> " + leavesAsString).getBytes());
+						fos.write("\n".getBytes());
+					}
+				}
+			}else{
+				if(containsKeywordMatch(parentTree)){
+					childLeaves = parentTree.getLeaves();
+					leavesAsString = getLeavesAsString(childLeaves);
+					fos.write(("---> " + leavesAsString).getBytes());
+					fos.write("\n".getBytes());
+				}
+			}
+		}
+	}
+
+	private static boolean containsSubjectChildren(List<Tree> childrenTrees){
+		for(Tree child : childrenTrees){
+			if(child.label().toString().equals("S")){
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private static boolean containsKeywordMatch(Tree childTree) {
+		List<Tree> childLeaves = childTree.getLeaves();
+		String term ;
+		for(Tree leafNodes : childLeaves){
+			term = leafNodes.label().toString();
+			for(String keyword : keywordSet)
+			{
+				if(Character.toLowerCase(term.charAt(0)) == Character.toLowerCase(keyword.charAt(0)))
+				{
+					float score = levenshtein.getSimilarity(keyword, term);
+					if(score >= 0.8)
+					{
+						return true;
+					}
+				}				
+			}
+		}
+
+		return false;
 	}
 }
