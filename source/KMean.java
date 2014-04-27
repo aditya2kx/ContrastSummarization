@@ -153,5 +153,21 @@ public class KMean
 			}
 			System.out.println("\n\n");
 		}
+	}
+	
+	void displayClusterIndices()
+	{
+		for(int clusterCenterIndex = 0; clusterCenterIndex < K; clusterCenterIndex++)
+		{
+			System.out.println("\n Cluster no:" +clusterCenterIndex+" Sentence Index are :" );
+			for(int clusterSizeIndex = 0; clusterSizeIndex < clusterCount[clusterCenterIndex];
+					clusterSizeIndex++)
+			{ 
+				System.out.print(" " + 
+									clusters[clusterCenterIndex][clusterSizeIndex]);
+			}
+			System.out.println("\n\n");
+		}
 	}	
+
 }
