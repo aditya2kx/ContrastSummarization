@@ -2,28 +2,28 @@ package source;
 
 public class KMean
 {
-	int K;
-	float distanceFromClusterCenter[];
-	int numberOfSentences;
-	int numberOfFeatures;
-	float vectorList[][];  //i = sentence, j = vector set for sentence i 
-	int clusters[][];   //i = cluster no.,j = sentence index
-	float clusterCenters[][]; //i = sentence, j = vector set for sentence i
-	int clusterCount[]; // # of sentences in cluster i
-	int previousClusters[][]; //previous clusters;i = cluster no.,j = sentence index
-	int previousClusterCount[];// # of sentences in previous cluster i
+	public int K;
+	public double distanceFromClusterCenter[];
+	public int numberOfSentences;
+	public int numberOfFeatures;
+	public double vectorList[][];  //i = sentence, j = vector set for sentence i 
+	public int clusters[][];   //i = cluster no.,j = sentence index
+	public double clusterCenters[][]; //i = sentence, j = vector set for sentence i
+	public int clusterCount[]; // # of sentences in cluster i
+	public int previousClusters[][]; //previous clusters;i = cluster no.,j = sentence index
+	public int previousClusterCount[];// # of sentences in previous cluster i
 	
-	public KMean(int numberOfClusters, int numberOfSentences, int numberOfFeatures, float dataset[][])         
+	public KMean(int numberOfClusters, int numberOfSentences, int numberOfFeatures, double dataset[][])         
 	{
 		this.K = numberOfClusters; // making cluster size as k-1 DONT KNOW WHY. I guess because we will index from 0.
 		this.numberOfFeatures = numberOfFeatures;
 		this.numberOfSentences = numberOfSentences;
-		distanceFromClusterCenter = new float[numberOfClusters];
+		distanceFromClusterCenter = new double[numberOfClusters];
 		vectorList = dataset;
 		
 		clusterCount = new int[numberOfSentences]; //initializing each cluster size as 0
 		previousClusterCount = new int[numberOfSentences]; //initializing each cluster size as 0
-		clusterCenters = new float[K][numberOfFeatures];
+		clusterCenters = new double[K][numberOfFeatures];
 		clusters = new int[K][numberOfSentences];
 		previousClusters = new int[K][numberOfSentences];
 		
@@ -47,7 +47,7 @@ public class KMean
 		}
 	}
 
-	boolean hasClustersChanged()
+	public boolean hasClustersChanged()
 	{
 		for(int clusterIndex = 0; clusterIndex < K; clusterIndex++)
 		{
@@ -63,7 +63,7 @@ public class KMean
 		return false;
 	}
 	
-	void displayClusterCenterValues()
+	public void displayClusterCenterValues()
 	{
 		for(int clusterCenterIndex = 0; clusterCenterIndex < K; clusterCenterIndex++)
 		{   
@@ -76,7 +76,7 @@ public class KMean
 		}
 	}
 
-	void refactorClusterStructure()
+	public void refactorClusterStructure()
 	{
 		clusterCount = new int[numberOfSentences]; //initializing each cluster size as 0 
 
@@ -86,8 +86,8 @@ public class KMean
 			for ( int clusterCenterIndex = 0; clusterCenterIndex < K; clusterCenterIndex++)
 			{              
 				distanceFromClusterCenter[clusterCenterIndex] = 0;
-				float clusterCenterMod = 0;
-				float vectorMod = 0;
+				double clusterCenterMod = 0;
+				double vectorMod = 0;
 				for(int featureIndex = 0; featureIndex < numberOfFeatures; featureIndex++)
 				{
 					distanceFromClusterCenter[clusterCenterIndex] += 
@@ -100,13 +100,13 @@ public class KMean
 					vectorMod += vectorList[sentenceIndex][featureIndex] *
 										vectorList[sentenceIndex][featureIndex];
 				}
-				clusterCenterMod = (float) Math.sqrt(clusterCenterMod);
-				vectorMod = (float) Math.sqrt(vectorMod);
+				clusterCenterMod = Math.sqrt(clusterCenterMod);
+				vectorMod = Math.sqrt(vectorMod);
 				distanceFromClusterCenter[clusterCenterIndex] /= (clusterCenterMod * vectorMod);
 			}
 			// find minimum distance index cluster no 't'
 			int maximumDistanceIndex = 0;
-			float maximumDistance = distanceFromClusterCenter[0];   
+			double maximumDistance = distanceFromClusterCenter[0];   
 			for ( int clusterCenterIndex = 0; clusterCenterIndex < K; clusterCenterIndex++)                  
 			{
 				if(maximumDistance < distanceFromClusterCenter[clusterCenterIndex])
@@ -137,7 +137,7 @@ public class KMean
 		}
 	}
 
-	void displayClusterContents()
+	public void displayClusterContents()
 	{
 		for(int clusterCenterIndex = 0; clusterCenterIndex < K; clusterCenterIndex++)
 		{
@@ -155,7 +155,7 @@ public class KMean
 		}
 	}
 	
-	void displayClusterIndices()
+	public void displayClusterIndices()
 	{
 		for(int clusterCenterIndex = 0; clusterCenterIndex < K; clusterCenterIndex++)
 		{
