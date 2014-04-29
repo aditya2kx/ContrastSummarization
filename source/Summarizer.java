@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class Summarizer 
 {
@@ -32,7 +33,7 @@ public class Summarizer
 			for(int i = 0; i < dataset.length; i++){
 				System.out.println(Arrays.toString(dataset[i]));
 			}
-			km = new KMean(3, dataset.length, dataset[0].length, dataset);
+			km = new KMean(10, dataset.length, dataset[0].length, dataset);
 			
 			System.out.println("\n\n");
 			boolean t=true;
@@ -53,6 +54,21 @@ public class Summarizer
 						}
 					}
 
+				}
+			}
+			
+			List<String> sentencesList = ltc.getSentencesList();
+			for(int i=0;i<km.K;i++)
+			{
+				int[] supportingNodes = km.clusters[i];
+				int clustersize = km.clusterCount[i];
+				int centroidSentenceIndex = km.getCentroidSentence(i);
+				System.out.println("Cluster "+i+" Sentence Index: "+ sentencesList.get(km.getCentroidSentence(i)));
+				for(int index = 0; index < clustersize; index++){
+					int supportingSentence = supportingNodes[index];
+					if(centroidSentenceIndex != supportingSentence){
+						System.out.println("--> Supporting Sentence: " + sentencesList.get(supportingSentence));
+					}
 				}
 			}
 			
