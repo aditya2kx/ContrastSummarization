@@ -27,7 +27,7 @@ public class Summarizer
 			}
 			ltc = new LTCGenerator(lines);
 			double dataset[][] = ltc.calculateTLC();
-			km = new KMean(3, dataset.length, dataset[0].length, dataset);
+			km = new KMean(2, dataset.length, dataset[0].length, dataset);
 			
 			System.out.println("\n\n");
 			boolean t=true;
