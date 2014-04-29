@@ -115,7 +115,7 @@ public class KMean
 		initialClusterIndices[0] = 0;
 		for(int clusterIndex = 1; clusterIndex < K; clusterIndex++)
 		{
-			initialClusterIndices[clusterIndex] = sortedDistList.get(clusterIndex).getKey();
+			initialClusterIndices[clusterIndex] = sortedDistList.get(clusterIndex - 1).getKey();
 		}
 		return initialClusterIndices;
 		
