@@ -70,4 +70,19 @@ public class Utils {
 		
 		return false;
 	}
+	
+	public static String getSimilarKeyword(Set<String> keywordSet, String term){
+		for(String keyword : keywordSet){
+			String lowerCase = term.toLowerCase();
+			if(Character.toLowerCase(term.charAt(0)) == Character.toLowerCase(keyword.charAt(0)) 
+					&& !skipWordsSet.contains(lowerCase)){
+				float score = levenshtein.getSimilarity(keyword, term);
+				if(score >= 0.8){
+					return keyword;
+				}
+			}
+		}
+		
+		return null;
+	}
 }

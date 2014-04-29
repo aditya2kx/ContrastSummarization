@@ -21,6 +21,7 @@ import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.util.CoreMap;
 import static source.Utils.isSimilar;
+import static source.Utils.getSimilarKeyword;
 
 public class LTCGenerator {
 
@@ -124,6 +125,7 @@ public class LTCGenerator {
 		Double ltcnum = 0.0, ltcdenom;
 		int totalDocs = documentTermsMap.size();
 		Map<String, Double> ltcMap;
+		String keyword;
 		Set<String> documentTermSet;
 		Set<String> termSet = termToIndexMap.keySet();
 
@@ -155,8 +157,9 @@ public class LTCGenerator {
 				ltcMap.put(term, ltcnum);
 
 				//Category keywords in the document
-				if(isSimilar(keywordSet, term)){
-					termIndex = keywordsToIndexMap.get(term);
+				keyword = getSimilarKeyword(keywordSet, term);
+				if(keyword != null){
+					termIndex = keywordsToIndexMap.get(keyword);
 					featureVector[docIter][termIndex] += KEYWORD_FEATURE_WEIGHT;
 				}
 			}
