@@ -7,21 +7,21 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashSet;
 
-public class keywordsFetcher 
+public class KeywordsFetcher 
 {
 	public static HashSet<String> keywords;
-	private static keywordsFetcher instance;
+	private static KeywordsFetcher instance;
 	
-	public static keywordsFetcher getInstance(String filename)
+	public static KeywordsFetcher getInstance(String filename)
 	{
 		if(instance == null)
 		{
-			instance = new keywordsFetcher(filename);
+			instance = new KeywordsFetcher(filename);
 		}
 		return instance;
 	}
 	
-	private keywordsFetcher(String filename)
+	private KeywordsFetcher(String filename)
 	{
 		HashSet<String> keywords = new HashSet<String>();
 		FileInputStream fis = null;
