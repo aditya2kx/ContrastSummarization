@@ -37,10 +37,12 @@ public class LTCGenerator {
 
 	private String[] featureWords;
 
-	private List<String> sentencesList;
+	private Map<String, Integer> sentencesToIndexMap;
 
 	private Map<String, Integer> keywordsToIndexMap;
-	
+
+	private List<String> sentencesList;
+
 	private static int KEYWORD_FEATURE_WEIGHT = 2;
 
 	public LTCGenerator(List<String> sentencesList, String keywordsCategoryPath) throws FileNotFoundException, IOException{
@@ -48,9 +50,20 @@ public class LTCGenerator {
 		termToIndexMap = new HashMap<>();
 		keywordsToIndexMap = new HashMap<>();
 		inverseDocumentFreqMap = new HashMap<>();
+		sentencesToIndexMap = new HashMap<>();
 		stopWordsSet = Utils.getStopWords();
-		this.sentencesList = sentencesList;
+		sentencesList = new ArrayList<>();
 
+		//Sentence Indexing
+		int sentenceIndex = 0;
+		for(String sentence : sentencesList){
+			if(!sentencesToIndexMap.containsKey(sentence)){
+				sentencesToIndexMap.put(sentence, sentenceIndex);
+				sentencesList.add(sentence);
+			}
+		}
+
+		sentencesList = new ArrayList<>(sentencesToIndexMap.keySet());
 		Set<String> termsList = getUniqueTerms(sentencesList);
 		int indexCount = 0;
 		for(String term : termsList){
@@ -60,14 +73,14 @@ public class LTCGenerator {
 		String[] wordSplit;
 		Set<String> keywordsSet = KeywordsFetcher.getInstance(keywordsCategoryPath).getKeywords();
 		for(String keyword : keywordsSet){
-				wordSplit = keyword.split("\\s+");
-				if(wordSplit.length <= 1){
-					keywordsToIndexMap.put(keyword, indexCount++);
-				}
+			wordSplit = keyword.split("\\s+");
+			if(wordSplit.length <= 1){
+				keywordsToIndexMap.put(keyword, indexCount++);
+			}
 		}
 
 		featureWords = new String[indexCount];
-		featureVector = new double[sentencesList.size()][indexCount];
+		featureVector = new double[sentencesToIndexMap.size()][indexCount];
 	}
 
 	private Set<String> getUniqueTerms(List<String> sentencesList){
@@ -184,11 +197,15 @@ public class LTCGenerator {
 		return featureWords;
 	}
 
-	public List<String> getSentencesList(){
-		return sentencesList;
+	public Map<String, Integer> getSentencesToIndexMap(){
+		return sentencesToIndexMap;
 	}
 
 	public Map<String, Integer> getKeywordsMap(){
 		return keywordsToIndexMap;
+	}
+	
+	public List<String> getSentencesList(){
+		return sentencesList;
 	}
 }

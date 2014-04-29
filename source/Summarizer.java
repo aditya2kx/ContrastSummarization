@@ -11,6 +11,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class Summarizer 
 {
@@ -92,11 +93,15 @@ public class Summarizer
 					sim1Scores.put(currentSentence, score);
 				}
 			}
+			
+			Map<String, Integer> sentencesToIndexMap = ltc.getSentencesToIndexMap();
 			SortComparator sortComparator = new SortComparator();
 			List<Map.Entry<String, Double>> sortedSim1List = new ArrayList<>(sim1Scores.entrySet());
 			Collections.sort(sortedSim1List, sortComparator);
+			double[] featureVector;
 			for(Map.Entry<String, Double> candidates : sortedSim1List)
 			{
+				featureVector = dataset[sentencesToIndexMap.get(candidates.getKey())];
 				System.out.println(candidates.getValue()+"  "+candidates.getKey());
 			}
 		}
