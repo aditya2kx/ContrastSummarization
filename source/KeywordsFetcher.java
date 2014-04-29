@@ -45,4 +45,8 @@ public class KeywordsFetcher
 			e.printStackTrace();
 		}
 	}
+
+	public HashSet<String> getKeywords() {
+		return keywords;
+	}
 }

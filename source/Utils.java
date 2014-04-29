@@ -58,8 +58,9 @@ public class Utils {
 	
 	public static boolean isSimilar(Set<String> keywordSet, String term){
 		for(String keyword : keywordSet){
+			String lowerCase = term.toLowerCase();
 			if(Character.toLowerCase(term.charAt(0)) == Character.toLowerCase(keyword.charAt(0)) 
-					&& !skipWordsSet.contains(term.toLowerCase())){
+					&& !skipWordsSet.contains(lowerCase)){
 				float score = levenshtein.getSimilarity(keyword, term);
 				if(score >= 0.8){
 					return true;

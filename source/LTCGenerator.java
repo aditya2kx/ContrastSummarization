@@ -1,5 +1,9 @@
 package source;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -8,6 +12,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import uk.ac.shef.wit.simmetrics.similaritymetrics.Levenshtein;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
@@ -15,6 +20,7 @@ import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.util.CoreMap;
+import static source.Utils.isSimilar;
 
 public class LTCGenerator {
 
@@ -27,26 +33,40 @@ public class LTCGenerator {
 	private List<Map<String, Integer>> documentTermsMap;
 
 	private Map<String, Integer> inverseDocumentFreqMap;
-	
+
 	private String[] featureWords;
-	
+
 	private List<String> sentencesList;
 
-	public LTCGenerator(List<String> sentencesList){
+	private Map<String, Integer> keywordsToIndexMap;
+	
+	private static int KEYWORD_FEATURE_WEIGHT = 2;
+
+	public LTCGenerator(List<String> sentencesList, String keywordsCategoryPath) throws FileNotFoundException, IOException{
 		documentTermsMap = new ArrayList<>();
 		termToIndexMap = new HashMap<>();
+		keywordsToIndexMap = new HashMap<>();
 		inverseDocumentFreqMap = new HashMap<>();
 		stopWordsSet = Utils.getStopWords();
 		this.sentencesList = sentencesList;
 
 		Set<String> termsList = getUniqueTerms(sentencesList);
-		int count = 0;
+		int indexCount = 0;
 		for(String term : termsList){
-			termToIndexMap.put(term, count++);
+			termToIndexMap.put(term, indexCount++);
 		}
 
-		featureWords = new String[termsList.size()];
-		featureVector = new double[sentencesList.size()][termsList.size()];
+		String[] wordSplit;
+		Set<String> keywordsSet = KeywordsFetcher.getInstance(keywordsCategoryPath).getKeywords();
+		for(String keyword : keywordsSet){
+				wordSplit = keyword.split("\\s+");
+				if(wordSplit.length <= 1){
+					keywordsToIndexMap.put(keyword, indexCount++);
+				}
+		}
+
+		featureWords = new String[indexCount];
+		featureVector = new double[sentencesList.size()][indexCount];
 	}
 
 	private Set<String> getUniqueTerms(List<String> sentencesList){
@@ -106,13 +126,19 @@ public class LTCGenerator {
 		Map<String, Double> ltcMap;
 		Set<String> documentTermSet;
 		Set<String> termSet = termToIndexMap.keySet();
-		
+
 		//Update the feature words vector
 		for(String term : termSet){
 			termIndex = termToIndexMap.get(term);
 			featureWords[termIndex] = term;
 		}
-		
+
+		Set<String> keywordSet = keywordsToIndexMap.keySet();
+		for(String term : keywordSet){
+			termIndex = keywordsToIndexMap.get(term);
+			featureWords[termIndex] = term;
+		}
+
 		//Calculate the LTC weights
 		for(Map<String, Integer> termMap : documentTermsMap){
 			ltcdenom = 0.0;
@@ -127,11 +153,18 @@ public class LTCGenerator {
 				ltcdenom += Math.pow(ltcnum, 2.0);
 
 				ltcMap.put(term, ltcnum);
+
+				//Category keywords in the document
+				if(isSimilar(keywordSet, term)){
+					termIndex = keywordsToIndexMap.get(term);
+					featureVector[docIter][termIndex] += KEYWORD_FEATURE_WEIGHT;
+				}
 			}
-			
+
 			//Calculate the feature vector
 			ltcdenom = Math.sqrt(ltcdenom);
 			for(String term : termSet){
+				//Terms in the document
 				termIndex = termToIndexMap.get(term);
 				ltcnum = ltcMap.get(term);
 				ltcnum = (ltcnum == null)  ? 0 : ltcnum;
@@ -143,12 +176,16 @@ public class LTCGenerator {
 
 		return featureVector;
 	}
-	
+
 	public String[] getTermSet(){
 		return featureWords;
 	}
-	
+
 	public List<String> getSentencesList(){
 		return sentencesList;
+	}
+
+	public Map<String, Integer> getKeywordsMap(){
+		return keywordsToIndexMap;
 	}
 }
