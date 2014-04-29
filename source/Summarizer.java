@@ -6,7 +6,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Summarizer 
 {
@@ -72,6 +76,29 @@ public class Summarizer
 				}
 			}
 			
+			double lambda = 0.5;
+			double weights[] = {0.6, 0.4, 0.6, 0.4};
+			MMR_MD_Utility relevanceRanker = new MMR_MD_Utility(weights, args[1]);
+			HashMap<String, Double> sim1Scores = new HashMap<String, Double>();
+			for(int i=0;i<km.K;i++)
+			{
+				int[] supportingNodes = km.clusters[i];
+				int clustersize = km.clusterCount[i];
+				for(int index = 0; index < clustersize; index++)
+				{
+					int supportingSentence = supportingNodes[index];
+					String currentSentence = sentencesList.get(supportingSentence);
+					double score = lambda * relevanceRanker.Similarity_1(currentSentence, clustersize);
+					sim1Scores.put(currentSentence, score);
+				}
+			}
+			SortComparator sortComparator = new SortComparator();
+			List<Map.Entry<String, Double>> sortedSim1List = new ArrayList<>(sim1Scores.entrySet());
+			Collections.sort(sortedSim1List, sortComparator);
+			for(Map.Entry<String, Double> candidates : sortedSim1List)
+			{
+				System.out.println(candidates.getValue()+"  "+candidates.getKey());
+			}
 		}
 		catch(FileNotFoundException e)
 		{
@@ -80,6 +107,15 @@ public class Summarizer
 		catch(IOException e)
 		{
 			e.printStackTrace();
+		}
+	}
+	private static class SortComparator implements Comparator<Map.Entry<String, Double>>
+	{
+		@Override
+		public int compare(Map.Entry<String, Double> o1, Map.Entry<String, Double> o2) 
+		{
+			// TODO Auto-generated method stub
+			return o2.getValue().compareTo(o1.getValue());
 		}
 	}
 

@@ -261,12 +261,13 @@ public class KMean
 		}
 	}	
 
-	private static class SortComparator implements Comparator<Map.Entry<Integer, Double>>{
+	private static class SortComparator implements Comparator<Map.Entry<Integer, Double>>
+	{
 		@Override
-		public int compare(Map.Entry<Integer, Double> o1, Map.Entry<Integer, Double> o2) {
+		public int compare(Map.Entry<Integer, Double> o1, Map.Entry<Integer, Double> o2) 
+		{
 			// TODO Auto-generated method stub
 			return o1.getValue().compareTo(o2.getValue());
 		}
-		
 	}
 }

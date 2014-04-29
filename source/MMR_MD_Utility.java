@@ -14,14 +14,12 @@ import edu.stanford.nlp.util.CoreMap;
 public class MMR_MD_Utility 
 {
 	double weights[];
-	double lambda;
 	Properties props;
 	StanfordCoreNLP pipeline;
 	Set<String> keywords;
-	public MMR_MD_Utility(double weights[], double lambda, String filename)
+	public MMR_MD_Utility(double weights[], String filename)
 	{
 		this.weights = weights;
-		this.lambda = lambda;
 		props = new Properties();
 		props.put("annotators", "tokenize, ssplit");
 		pipeline = new StanfordCoreNLP(props);
