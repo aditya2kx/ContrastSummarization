@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -119,6 +118,40 @@ public class KMean
 		}
 		return initialClusterIndices;
 		
+	}
+	
+	public int getCentroidSentence(int clusterIndex)
+	{
+		double maximumDistance = -1;
+		int sentenceIndex = -1;
+		for ( int clusterSetIndex = 0; clusterSetIndex < clusterCount[clusterIndex]; clusterSetIndex++)
+		{
+			// find for a particular sentence, distance from all cluster centers
+			double distanceFromCentroid = 0;
+			double nodeCentroid = 0;
+			double vectorNode = 0;
+			for(int featureIndex = 0; featureIndex < numberOfFeatures; featureIndex++)
+			{
+				distanceFromCentroid += 
+						(vectorList[clusters[clusterIndex][clusterSetIndex]][featureIndex] * 
+								clusterCenters[clusterIndex][featureIndex]);
+				
+				nodeCentroid += clusterCenters[clusterIndex][featureIndex] *
+						clusterCenters[clusterIndex][featureIndex];
+				
+				vectorNode += vectorList[clusters[clusterIndex][clusterSetIndex]][featureIndex] *
+						vectorList[clusters[clusterIndex][clusterSetIndex]][featureIndex];
+			}
+			nodeCentroid = Math.sqrt(nodeCentroid);
+			vectorNode = Math.sqrt(vectorNode);
+			distanceFromCentroid /= (nodeCentroid * vectorNode);
+			if(distanceFromCentroid > maximumDistance)
+			{
+				maximumDistance = distanceFromCentroid;
+				sentenceIndex = clusters[clusterIndex][clusterSetIndex];
+			}
+		}
+		return sentenceIndex;
 	}
 	
 	public void displayClusterCenterValues()
