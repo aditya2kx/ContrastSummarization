@@ -9,7 +9,7 @@ import java.util.HashSet;
 
 public class KeywordsFetcher 
 {
-	public static HashSet<String> keywords;
+	public HashSet<String> keywords;
 	private static KeywordsFetcher instance;
 	
 	public static KeywordsFetcher getInstance(String filename)
