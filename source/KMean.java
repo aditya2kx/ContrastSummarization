@@ -1,9 +1,17 @@
 package source;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
 public class KMean
 {
 	public int K;
-	public double distanceFromClusterCenter[];
+	public double distanceFromNodeZero[];
 	public int numberOfSentences;
 	public int numberOfFeatures;
 	public double vectorList[][];  //i = sentence, j = vector set for sentence i 
@@ -18,7 +26,7 @@ public class KMean
 		this.K = numberOfClusters; // making cluster size as k-1 DONT KNOW WHY. I guess because we will index from 0.
 		this.numberOfFeatures = numberOfFeatures;
 		this.numberOfSentences = numberOfSentences;
-		distanceFromClusterCenter = new double[numberOfClusters];
+		distanceFromNodeZero = new double[numberOfClusters];
 		vectorList = dataset;
 		
 		clusterCount = new int[K]; //initializing each cluster size as 0
@@ -27,12 +35,15 @@ public class KMean
 		clusters = new int[K][numberOfSentences];
 		previousClusters = new int[K][numberOfSentences];
 		
+		int initialClusterIndices[] = getInitialClusterCenterIndices();
+		
 		//initializing K clusters centroids
 		for(int clusterCenterIndex = 0; clusterCenterIndex < K; clusterCenterIndex++) //DOUBT 
 		{
 			for(int featureIndex = 0; featureIndex < numberOfFeatures; featureIndex++)
 			{
-				clusterCenters[clusterCenterIndex][featureIndex] = vectorList[clusterCenterIndex][featureIndex];
+				clusterCenters[clusterCenterIndex][featureIndex] = 
+						vectorList[initialClusterIndices[clusterCenterIndex]][featureIndex];
 			}
 		}
 		
@@ -63,6 +74,53 @@ public class KMean
 		return false;
 	}
 	
+	public int[] getInitialClusterCenterIndices()
+	{
+		if(K<=0)
+		{
+			return null;
+		}
+		Map<Integer, Double> distanceMap =	new HashMap<>();
+		//distanceMapFromNodeZero.put(1.0, 0);
+		
+		for ( int datasetIndex = 1; datasetIndex < numberOfSentences; datasetIndex++)
+		{
+			// find for a particular sentence, distance from all cluster centers
+				double distanceFromNodeZero = 0;
+				double NodeZero = 0;
+				double vectorNode = 0;
+				for(int featureIndex = 0; featureIndex < numberOfFeatures; featureIndex++)
+				{
+					distanceFromNodeZero += 
+							(vectorList[0][featureIndex] * 
+									vectorList[datasetIndex][featureIndex]);
+					
+					NodeZero += vectorList[0][featureIndex] *
+							vectorList[0][featureIndex];
+					
+					vectorNode += vectorList[datasetIndex][featureIndex] *
+										vectorList[datasetIndex][featureIndex];
+				}
+				NodeZero = Math.sqrt(NodeZero);
+				vectorNode = Math.sqrt(vectorNode);
+				distanceFromNodeZero /= (NodeZero * vectorNode);
+				distanceMap.put(datasetIndex, distanceFromNodeZero);
+		}
+
+		SortComparator sortComparator = new SortComparator();
+		List<Map.Entry<Integer, Double>> sortedDistList = new ArrayList<>(distanceMap.entrySet());
+		Collections.sort(sortedDistList, sortComparator);
+		
+		int initialClusterIndices[] = new int[K];
+		initialClusterIndices[0] = 0;
+		for(int clusterIndex = 1; clusterIndex < K; clusterIndex++)
+		{
+			initialClusterIndices[clusterIndex] = sortedDistList.get(clusterIndex).getKey();
+		}
+		return initialClusterIndices;
+		
+	}
+	
 	public void displayClusterCenterValues()
 	{
 		for(int clusterCenterIndex = 0; clusterCenterIndex < K; clusterCenterIndex++)
@@ -85,12 +143,12 @@ public class KMean
 			// find for a particular sentence, distance from all cluster centers
 			for ( int clusterCenterIndex = 0; clusterCenterIndex < K; clusterCenterIndex++)
 			{              
-				distanceFromClusterCenter[clusterCenterIndex] = 0;
+				distanceFromNodeZero[clusterCenterIndex] = 0;
 				double clusterCenterMod = 0;
 				double vectorMod = 0;
 				for(int featureIndex = 0; featureIndex < numberOfFeatures; featureIndex++)
 				{
-					distanceFromClusterCenter[clusterCenterIndex] += 
+					distanceFromNodeZero[clusterCenterIndex] += 
 							(clusterCenters[clusterCenterIndex][featureIndex] * 
 									vectorList[sentenceIndex][featureIndex]);
 					
@@ -102,17 +160,17 @@ public class KMean
 				}
 				clusterCenterMod = Math.sqrt(clusterCenterMod);
 				vectorMod = Math.sqrt(vectorMod);
-				distanceFromClusterCenter[clusterCenterIndex] /= (clusterCenterMod * vectorMod);
+				distanceFromNodeZero[clusterCenterIndex] /= (clusterCenterMod * vectorMod);
 			}
 			// find minimum distance index cluster no 't'
 			int maximumDistanceIndex = 0;
-			double maximumDistance = distanceFromClusterCenter[0];   
+			double maximumDistance = distanceFromNodeZero[0];   
 			for ( int clusterCenterIndex = 0; clusterCenterIndex < K; clusterCenterIndex++)                  
 			{
-				if(maximumDistance < distanceFromClusterCenter[clusterCenterIndex])
+				if(maximumDistance < distanceFromNodeZero[clusterCenterIndex])
 				{
 					maximumDistanceIndex = clusterCenterIndex;
-					maximumDistance = distanceFromClusterCenter[clusterCenterIndex];
+					maximumDistance = distanceFromNodeZero[clusterCenterIndex];
 				}
 			}
 			
@@ -125,7 +183,7 @@ public class KMean
 		{
 			for(int featureIndex = 0; featureIndex < numberOfFeatures; featureIndex++)
 			{ 
-				int totalSum = 0;
+				double totalSum = 0;
 				for(int clusterSizeIndex = 0; clusterSizeIndex < clusterCount[clusterCenterIndex]; 
 						clusterSizeIndex++)
 				{
@@ -170,4 +228,12 @@ public class KMean
 		}
 	}	
 
+	private static class SortComparator implements Comparator<Map.Entry<Integer, Double>>{
+		@Override
+		public int compare(Map.Entry<Integer, Double> o1, Map.Entry<Integer, Double> o2) {
+			// TODO Auto-generated method stub
+			return o1.getValue().compareTo(o2.getValue());
+		}
+		
+	}
 }

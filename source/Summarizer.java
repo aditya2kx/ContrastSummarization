@@ -45,14 +45,11 @@ public class Summarizer
 				t=km.hasClustersChanged();
 				if(t==true)
 				{
-					for(int i=0;i<=km.K;i++)
+					for(int i=0;i<km.K;i++)
 					{
 						for(int j=0;j<km.clusterCount[i];j++)
 						{
-							for(int k=0;k<dataset[0].length;k++)
-							{
-								km.previousClusters[i][j] = km.clusters[i][j]; 
-							}
+							km.previousClusters[i][j] = km.clusters[i][j]; 
 						}
 					}
 
