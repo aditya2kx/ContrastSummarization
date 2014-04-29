@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class Summarizer 
 {
@@ -27,7 +28,11 @@ public class Summarizer
 			}
 			ltc = new LTCGenerator(lines);
 			double dataset[][] = ltc.calculateTLC();
-			km = new KMean(2, dataset.length, dataset[0].length, dataset);
+			System.out.println(Arrays.toString(ltc.getTermSet()));
+			for(int i = 0; i < dataset.length; i++){
+				System.out.println(Arrays.toString(dataset[i]));
+			}
+			km = new KMean(3, dataset.length, dataset[0].length, dataset);
 			
 			System.out.println("\n\n");
 			boolean t=true;
