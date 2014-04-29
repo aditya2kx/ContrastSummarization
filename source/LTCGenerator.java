@@ -29,12 +29,15 @@ public class LTCGenerator {
 	private Map<String, Integer> inverseDocumentFreqMap;
 	
 	private String[] featureWords;
+	
+	private List<String> sentencesList;
 
 	public LTCGenerator(List<String> sentencesList){
 		documentTermsMap = new ArrayList<>();
 		termToIndexMap = new HashMap<>();
 		inverseDocumentFreqMap = new HashMap<>();
 		stopWordsSet = Utils.getStopWords();
+		this.sentencesList = sentencesList;
 
 		Set<String> termsList = getUniqueTerms(sentencesList);
 		int count = 0;
@@ -143,5 +146,9 @@ public class LTCGenerator {
 	
 	public String[] getTermSet(){
 		return featureWords;
+	}
+	
+	public List<String> getSentencesList(){
+		return sentencesList;
 	}
 }
