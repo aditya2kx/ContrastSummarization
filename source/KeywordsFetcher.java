@@ -23,7 +23,7 @@ public class KeywordsFetcher
 	
 	private KeywordsFetcher(String filename)
 	{
-		HashSet<String> keywords = new HashSet<String>();
+		keywords = new HashSet<String>();
 		FileInputStream fis = null;
 		BufferedReader br = null;
 		String currentLine = null;
