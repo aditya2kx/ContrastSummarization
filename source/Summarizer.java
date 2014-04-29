@@ -26,7 +26,7 @@ public class Summarizer
 			{
 				lines.add(currentLine);
 			}
-			ltc = new LTCGenerator(lines);
+			ltc = new LTCGenerator(lines, args[1]);
 			double dataset[][] = ltc.calculateTLC();
 			System.out.println(Arrays.toString(ltc.getTermSet()));
 			for(int i = 0; i < dataset.length; i++){
