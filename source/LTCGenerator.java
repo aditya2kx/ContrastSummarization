@@ -77,7 +77,11 @@ public class LTCGenerator {
 				}
 			}
 
+			System.out.println(termsMap);
 			for(String term : termsMap.keySet()){
+				if(term.equalsIgnoreCase("sausage")){
+					System.out.println("test!");
+				}
 				val = 0;
 				if(inverseDocumentFreqMap.containsKey(term)){
 					val = inverseDocumentFreqMap.get(term);
@@ -104,7 +108,8 @@ public class LTCGenerator {
 			ltcMap = new HashMap<>();
 
 			for(String term : termSet){
-				tf = termMap.get(term);
+				Integer tfWrapper = termMap.get(term);
+				tf = tfWrapper == null ? 1 : tfWrapper;
 				isf = inverseDocumentFreqMap.get(term);
 
 				ltcnum = (1.0 + Math.log(tf) * Math.log(totalDocs/isf));
@@ -117,7 +122,7 @@ public class LTCGenerator {
 			for(String term : termSet){
 				termIndex = termToIndexMap.get(term);
 				ltcnum = ltcMap.get(term);
-				featureVector[docIter][termIndex] = (double) ltcnum/ltcdenom;
+				featureVector[docIter][termIndex] = (double) ltcnum/Math.sqrt(ltcdenom);
 			}
 
 			docIter++;

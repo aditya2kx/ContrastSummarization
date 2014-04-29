@@ -21,8 +21,8 @@ public class KMean
 		distanceFromClusterCenter = new double[numberOfClusters];
 		vectorList = dataset;
 		
-		clusterCount = new int[numberOfSentences]; //initializing each cluster size as 0
-		previousClusterCount = new int[numberOfSentences]; //initializing each cluster size as 0
+		clusterCount = new int[K]; //initializing each cluster size as 0
+		previousClusterCount = new int[K]; //initializing each cluster size as 0
 		clusterCenters = new double[K][numberOfFeatures];
 		clusters = new int[K][numberOfSentences];
 		previousClusters = new int[K][numberOfSentences];
@@ -78,7 +78,7 @@ public class KMean
 
 	public void refactorClusterStructure()
 	{
-		clusterCount = new int[numberOfSentences]; //initializing each cluster size as 0 
+		clusterCount = new int[K]; //initializing each cluster size as 0 
 
 		for ( int sentenceIndex = 0; sentenceIndex < numberOfSentences; sentenceIndex++)
 		{
