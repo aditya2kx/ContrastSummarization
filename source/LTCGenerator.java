@@ -27,6 +27,8 @@ public class LTCGenerator {
 	private List<Map<String, Integer>> documentTermsMap;
 
 	private Map<String, Integer> inverseDocumentFreqMap;
+	
+	private String[] featureWords;
 
 	public LTCGenerator(List<String> sentencesList){
 		documentTermsMap = new ArrayList<>();
@@ -40,6 +42,7 @@ public class LTCGenerator {
 			termToIndexMap.put(term, count++);
 		}
 
+		featureWords = new String[termsList.size()];
 		featureVector = new double[sentencesList.size()][termsList.size()];
 	}
 
@@ -95,36 +98,50 @@ public class LTCGenerator {
 
 	public double[][] calculateTLC(){
 		int tf, isf, termIndex, docIter = 0;
-		double ltcnum = 0.0, ltcdenom;
+		Double ltcnum = 0.0, ltcdenom;
 		int totalDocs = documentTermsMap.size();
 		Map<String, Double> ltcMap;
+		Set<String> documentTermSet;
 		Set<String> termSet = termToIndexMap.keySet();
+		
+		//Update the feature words vector
+		for(String term : termSet){
+			termIndex = termToIndexMap.get(term);
+			featureWords[termIndex] = term;
+		}
+		
+		//Calculate the LTC weights
 		for(Map<String, Integer> termMap : documentTermsMap){
 			ltcdenom = 0.0;
 			//Set<String> termSet = termMap.keySet();
 			ltcMap = new HashMap<>();
-
-			for(String term : termSet){
-				Integer tfWrapper = termMap.get(term);
-				tf = tfWrapper == null ? 1 : tfWrapper;
+			documentTermSet = termMap.keySet();
+			for(String term : documentTermSet){
+				tf = termMap.get(term);
 				isf = inverseDocumentFreqMap.get(term);
 
-				ltcnum = ((1.0 + Math.log(tf)) * Math.log(totalDocs/isf));
+				ltcnum = ((1.0 + Math.log10(tf)) * Math.log10((double)totalDocs/isf));
 				ltcdenom += Math.pow(ltcnum, 2.0);
 
 				ltcMap.put(term, ltcnum);
 			}
-
+			
 			//Calculate the feature vector
+			ltcdenom = Math.sqrt(ltcdenom);
 			for(String term : termSet){
 				termIndex = termToIndexMap.get(term);
 				ltcnum = ltcMap.get(term);
-				featureVector[docIter][termIndex] = (double) ltcnum/Math.sqrt(ltcdenom);
+				ltcnum = (ltcnum == null)  ? 0 : ltcnum;
+				featureVector[docIter][termIndex] = (double) ltcnum/ltcdenom;
 			}
 
 			docIter++;
 		}
 
 		return featureVector;
+	}
+	
+	public String[] getTermSet(){
+		return featureWords;
 	}
 }
