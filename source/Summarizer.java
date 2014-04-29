@@ -81,6 +81,7 @@ public class Summarizer
 			double weights[] = {0.6, 0.4, 0.6, 0.4};
 			MMR_MD_Utility relevanceRanker = new MMR_MD_Utility(weights, args[1]);
 			HashMap<String, Double> sim1Scores = new HashMap<String, Double>();
+			Map<String, Integer> sentencesToClusterCenterMap = new HashMap<String, Integer>();
 			for(int i=0;i<km.K;i++)
 			{
 				int[] supportingNodes = km.clusters[i];
@@ -91,6 +92,7 @@ public class Summarizer
 					String currentSentence = sentencesList.get(supportingSentence);
 					double score = lambda * relevanceRanker.Similarity_1(currentSentence, clustersize);
 					sim1Scores.put(currentSentence, score);
+					sentencesToClusterCenterMap.put(currentSentence, i);
 				}
 			}
 			
