@@ -29,11 +29,11 @@ public class KeywordsFetcher
 		String currentLine = null;
 		try
 		{
-			fis = new FileInputStream("C:\\Users\\Rockstar\\Google Drive\\Natural Language Processing Project\\Dataset\\aggregate_keywords_file.txt");
+			fis = new FileInputStream(filename);
 			br = new BufferedReader(new InputStreamReader(fis));
 			while((currentLine = br.readLine())!=null)
 			{
-				keywords.add(currentLine);
+				keywords.add(currentLine.toLowerCase());
 			}
 		}
 		catch(FileNotFoundException e)
