@@ -32,7 +32,7 @@ public class Summarizer
 			for(int i = 0; i < dataset.length; i++){
 				System.out.println(Arrays.toString(dataset[i]));
 			}
-			km = new KMean(3, dataset.length, dataset[0].length, dataset);
+			km = new KMean(2, dataset.length, dataset[0].length, dataset);
 			
 			System.out.println("\n\n");
 			boolean t=true;
