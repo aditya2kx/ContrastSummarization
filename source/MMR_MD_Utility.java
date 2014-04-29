@@ -59,7 +59,7 @@ public class MMR_MD_Utility
 	{
 		double score = 0;		
 		score = weights[0] * similarityPassageAndCategory(passage);
-		score += weights[1] * Math.log10((double)(1.0/clusterSize));
+		score += weights[1] * Math.log10(clusterSize);
 		return score;
 	}
 	
