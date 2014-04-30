@@ -100,12 +100,24 @@ public class Summarizer
 			SortComparator sortComparator = new SortComparator();
 			List<Map.Entry<String, Double>> sortedSim1List = new ArrayList<>(sim1Scores.entrySet());
 			Collections.sort(sortedSim1List, sortComparator);
+			
+			//Similarity 2 scores
+			Map<String, Double> sim2ScoresMap = new HashMap<>();
+			double[][] selectedPassages = new double[dataset.length][dataset[0].length];
 			double[] featureVector;
+			double sim2Score;
+			int sentenceIndex = 0;
 			for(Map.Entry<String, Double> candidates : sortedSim1List)
 			{
 				featureVector = dataset[sentencesToIndexMap.get(candidates.getKey())];
-				System.out.println(candidates.getValue()+"  "+candidates.getKey());
+				sim2Score = (1 - lambda) * relevanceRanker.Similarity_2(featureVector, selectedPassages, true, sentencesToClusterCenterMap.get(candidates.getKey()));
+				selectedPassages[sentenceIndex++] = featureVector;
+				
+				sim2ScoresMap.put(candidates.getKey(), sim2Score);
 			}
+			
+			List<Map.Entry<String, Double>> sortedSim2List = new ArrayList<>(sim2ScoresMap.entrySet());
+			Collections.sort(sortedSim2List, sortComparator);
 		}
 		catch(FileNotFoundException e)
 		{
