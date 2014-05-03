@@ -1,8 +1,8 @@
 package source;
 
-import java.io.BufferedReader;
+import static source.Utils.getSimilarKeyword;
+
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,16 +12,13 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import uk.ac.shef.wit.simmetrics.similaritymetrics.Levenshtein;
-import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
+import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.util.CoreMap;
-import static source.Utils.isSimilar;
-import static source.Utils.getSimilarKeyword;
 
 public class LTCGenerator {
 
@@ -45,7 +42,7 @@ public class LTCGenerator {
 
 	private static int KEYWORD_FEATURE_WEIGHT = 2;
 
-	public LTCGenerator(List<String> sentencesList, String keywordsCategoryPath) throws FileNotFoundException, IOException{
+	public LTCGenerator(List<String> inputLines, String keywordsCategoryPath) throws FileNotFoundException, IOException{
 		documentTermsMap = new ArrayList<>();
 		termToIndexMap = new HashMap<>();
 		keywordsToIndexMap = new HashMap<>();
@@ -56,14 +53,13 @@ public class LTCGenerator {
 
 		//Sentence Indexing
 		int sentenceIndex = 0;
-		for(String sentence : sentencesList){
+		for(String sentence : inputLines){
 			if(!sentencesToIndexMap.containsKey(sentence)){
 				sentencesToIndexMap.put(sentence, sentenceIndex);
 				sentencesList.add(sentence);
 			}
 		}
 
-		sentencesList = new ArrayList<>(sentencesToIndexMap.keySet());
 		Set<String> termsList = getUniqueTerms(sentencesList);
 		int indexCount = 0;
 		for(String term : termsList){
