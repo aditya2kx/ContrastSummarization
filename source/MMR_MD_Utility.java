@@ -64,11 +64,11 @@ public class MMR_MD_Utility
 	}
 	
 	public double similarityPassageAndSelectedPassages(double datasetForAPassage[],
-													 	double datasetForSelectedPassages[][])
+													 	double datasetForSelectedPassages[][],
+													 	int noOfSelectedPassages)
 	{
 		double score = 0;
-		for ( int sentenceIndex = 0; sentenceIndex < datasetForSelectedPassages.length;
-					sentenceIndex++)
+		for ( int sentenceIndex = 0; sentenceIndex < noOfSelectedPassages; sentenceIndex++)
 		{
 			double distance = 0;
 			double selectedSentenceMod = 0;
@@ -97,12 +97,13 @@ public class MMR_MD_Utility
 	}
 	
 	public double Similarity_2(double datasetForAPassage[], double datasetForSelectedPassages[][], 
-								boolean belongsToSelectedCluster, int selectedClusterSize)
+								int noOfSelectedPassages, boolean belongsToSelectedCluster, 
+								int selectedClusterSize)
 	{
 		double score = 0;
 		
 		score = weights[2] * similarityPassageAndSelectedPassages(datasetForAPassage,
-									datasetForSelectedPassages);
+									datasetForSelectedPassages, noOfSelectedPassages);
 		if(belongsToSelectedCluster)
 		{
 			score += weights[3] * Math.log10((double)(1.0/selectedClusterSize));
