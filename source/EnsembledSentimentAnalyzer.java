@@ -1,13 +1,11 @@
 package source;
 
-import java.io.UnsupportedEncodingException;
-import java.util.Map;
-import java.util.Properties;
-
-import edu.stanford.nlp.pipeline.StanfordCoreNLP;
-import static source.SentimentClass.Positive;
 import static source.SentimentClass.Negative;
 import static source.SentimentClass.Neutral;
+import static source.SentimentClass.Positive;
+
+import java.io.UnsupportedEncodingException;
+import java.util.Map;
 
 public class EnsembledSentimentAnalyzer {
 	
