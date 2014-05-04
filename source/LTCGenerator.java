@@ -56,9 +56,9 @@ public class LTCGenerator {
 		String trimSentence;
 		for(String sentence : inputLines){
 			trimSentence = sentence.trim();
-			if(!trimSentence.isEmpty() && !sentencesToIndexMap.containsKey(sentence)){
-				sentencesToIndexMap.put(sentence, sentenceIndex);
-				sentencesList.add(sentence);
+			if(!trimSentence.isEmpty() && !sentencesToIndexMap.containsKey(trimSentence)){
+				sentencesToIndexMap.put(trimSentence, sentenceIndex);
+				sentencesList.add(trimSentence);
 			}
 		}
 
