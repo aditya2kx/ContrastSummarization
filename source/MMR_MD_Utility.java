@@ -17,13 +17,13 @@ public class MMR_MD_Utility
 	Properties props;
 	StanfordCoreNLP pipeline;
 	Set<String> keywords;
-	public MMR_MD_Utility(double weights[], String filename)
+	public MMR_MD_Utility(double weights[], Set<String> keywordsSet)
 	{
 		this.weights = weights;
 		props = new Properties();
 		props.put("annotators", "tokenize, ssplit");
 		pipeline = new StanfordCoreNLP(props);
-		keywords = KeywordsFetcher.getInstance(filename).keywords;
+		keywords = keywordsSet;
 	}
 	
 	public double similarityPassageAndCategory(String passage)

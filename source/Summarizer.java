@@ -63,8 +63,9 @@ public class Summarizer
 				System.exit(0);
 			}
 
-			
-			ltc = new LTCGenerator(lines, args[1]);
+
+			Set<String> keywordsSet = KeywordsFetcher.getInstance(args[1]).getCategoryKeywords("food");
+			ltc = new LTCGenerator(lines, keywordsSet);
 			double dataset[][] = ltc.calculateTLC();
 			System.out.println(Arrays.toString(ltc.getTermSet()));
 			for(int i = 0; i < dataset.length; i++){
@@ -114,7 +115,7 @@ public class Summarizer
 			
 			double lambda = 0.8;
 			double weights[] = {0.2, 0.6, 0.2, 0.6, 0.4};
-			MMR_MD_Utility relevanceRanker = new MMR_MD_Utility(weights, args[1]);
+			MMR_MD_Utility relevanceRanker = new MMR_MD_Utility(weights, keywordsSet);
 			HashMap<String, Double> sim1Scores = new HashMap<String, Double>();
 			Map<String, Integer> sentencesToClusterCenterMap = new HashMap<String, Integer>();
 			Map<String, Integer> sentencesToIndexMap = ltc.getSentencesToIndexMap();

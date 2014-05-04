@@ -42,7 +42,7 @@ public class LTCGenerator {
 
 	private static int KEYWORD_FEATURE_WEIGHT = 2;
 
-	public LTCGenerator(List<String> inputLines, String keywordsCategoryPath) throws FileNotFoundException, IOException{
+	public LTCGenerator(List<String> inputLines, Set<String> keywordsSet) throws FileNotFoundException, IOException{
 		documentTermsMap = new ArrayList<>();
 		termToIndexMap = new HashMap<>();
 		keywordsToIndexMap = new HashMap<>();
@@ -69,7 +69,6 @@ public class LTCGenerator {
 		}
 
 		String[] wordSplit;
-		Set<String> keywordsSet = KeywordsFetcher.getInstance(keywordsCategoryPath).getKeywords();
 		for(String keyword : keywordsSet){
 			wordSplit = keyword.split("\\s+");
 			if(wordSplit.length <= 1){
