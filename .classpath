@@ -19,5 +19,8 @@
 	<classpathentry kind="lib" path="Jars/scribe-1.1.0.jar"/>
 	<classpathentry kind="lib" path="Jars/jersey-client-1.18.1.jar"/>
 	<classpathentry kind="lib" path="Jars/jersey-core-1.17.1.jar"/>
+	<classpathentry kind="lib" path="Jars/jackson-core-2.2.3.jar"/>
+	<classpathentry kind="lib" path="Jars/jackson-annotations-2.2.3.jar"/>
+	<classpathentry kind="lib" path="Jars/jackson-databind-2.2.3.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
