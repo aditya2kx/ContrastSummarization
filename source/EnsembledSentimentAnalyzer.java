@@ -7,8 +7,6 @@ import static source.SentimentClass.Positive;
 import static source.SentimentClass.Negative;
 import static source.SentimentClass.Neutral;
 
-import org.json.JSONObject;
-
 public class EnsembledSentimentAnalyzer {
 	
 	private static StanfordSentimentAnalysis stanfordSentiAnalyzer;
@@ -25,19 +23,17 @@ public class EnsembledSentimentAnalyzer {
 		ratingScoreUtil[5] = 1;
 	}
 
-	public static SentimentClass getSentimentClass(String reviewJsonString) throws UnsupportedEncodingException{
-		JSONObject jsonObj = new JSONObject(reviewJsonString);
-		String review = jsonObj.getString("text");
-		double ratingScore = ratingScoreUtil[jsonObj.getInt("stars")];
+	public static SentimentClass getSentimentClass(int rating, String reviewText) throws UnsupportedEncodingException{
+		double ratingScore = ratingScoreUtil[rating];
 		
 		//Splat Service
-		Map<SentimentClass, Double> splatSentiMap = SplatService.getSentimentValues(review);
+		Map<SentimentClass, Double> splatSentiMap = SplatService.getSentimentValues(reviewText);
 		double splatPosScore = splatSentiMap.get(Positive);
 		double splatNegScore = splatSentiMap.get(Negative);
 		double splatFinalScore = splatPosScore - splatNegScore;
 		
 		//Stanford Sentiment Analyzer
-		Map<SentimentClass, Double> stanfordSentiMap = stanfordSentiAnalyzer.getScore(review);
+		Map<SentimentClass, Double> stanfordSentiMap = stanfordSentiAnalyzer.getScore(reviewText);
 		double stanfordPosScore = stanfordSentiMap.get(Positive);
 		double stanfordNegScore = stanfordSentiMap.get(Negative);
 		double stanfordFinalScore = stanfordPosScore - stanfordNegScore;
@@ -54,10 +50,5 @@ public class EnsembledSentimentAnalyzer {
 		}
 		
 		return null;
-	}
-	public static void main(String[] args) throws UnsupportedEncodingException
-	{
-		System.out.println(EnsembledSentimentAnalyzer.getSentimentClass("{\"stars\":5,\"text\":\"In fact, I've been now 3 times before writing this review as I wanted to make sure my 'best pizza' claim was true.\"}")
-				+" "+"In fact, I've been now 3 times before writing this review as I wanted to make sure my 'best pizza' claim was true.");
 	}
 }
