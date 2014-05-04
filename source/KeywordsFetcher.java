@@ -37,7 +37,7 @@ public class KeywordsFetcher
 	}
 
 	public Map<String, Set<String>> loadKeywordsFile(String keywordsFile) throws FileNotFoundException, IOException{
-		Map<String, Set<String>> keywordsSetMap = new HashMap<>();
+		keywordsSetMap = new HashMap<>();
 		String readLine;
 		StringBuffer buffer = new StringBuffer();
 		try(BufferedReader reader = new BufferedReader(new FileReader(new File(keywordsFile)))){

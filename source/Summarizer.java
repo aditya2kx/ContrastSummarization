@@ -2,11 +2,11 @@ package source;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -48,12 +48,16 @@ public class Summarizer
 				for(int outputindex=0; outputindex<outputArray.length(); outputindex++)
 				{
 					JSONObject outputJSONObj = outputArray.getJSONObject(outputindex);
-					JSONArray foodArray = outputJSONObj.getJSONObject("categories").getJSONArray("food");
-					for(int foodindex=0; foodindex<foodArray.length(); foodindex++)
-					{
-						String temp = (String) foodArray.get(foodindex);
-						JSONObject foodJSONObj = new JSONObject(temp);//foodArray.get(0)//.getJSONObject(foodindex);
-						lines.add(foodJSONObj.getString("text"));
+					System.out.println(outputJSONObj.toString());
+					if(outputJSONObj.getJSONObject("categories").has("food"))
+					{	
+						JSONArray foodArray = outputJSONObj.getJSONObject("categories").getJSONArray("food");
+						for(int foodindex=0; foodindex<foodArray.length(); foodindex++)
+						{
+							String temp = (String) foodArray.get(foodindex);
+							JSONObject foodJSONObj = new JSONObject(temp);//foodArray.get(0)//.getJSONObject(foodindex);
+							lines.add(foodJSONObj.getString("text"));
+						}
 					}
 				}
 			}
@@ -67,20 +71,21 @@ public class Summarizer
 			Set<String> keywordsSet = KeywordsFetcher.getInstance(args[1]).getCategoryKeywords("food");
 			ltc = new LTCGenerator(lines, keywordsSet);
 			double dataset[][] = ltc.calculateTLC();
-			System.out.println(Arrays.toString(ltc.getTermSet()));
+			/*System.out.println(Arrays.toString(ltc.getTermSet()));
 			for(int i = 0; i < dataset.length; i++){
 				System.out.println(Arrays.toString(dataset[i]));
-			}
+			}*/
 			km = new KMean(5, dataset.length, dataset[0].length, dataset, ltc);
 			
 			System.out.println("\n\n");
 			boolean t=true;
+			int iterations = 0;
 			while(t)
 			{
-				km.displayClusterCenterValues();
-				System.out.println("\n\n");
+				//km.displayClusterCenterValues();
+				//System.out.println("\n\n");
 				km.refactorClusterStructure();
-				km.displayClusterIndices();
+				//km.displayClusterIndices();
 				t=km.hasClustersChanged();
 				if(t==true)
 				{
@@ -91,26 +96,35 @@ public class Summarizer
 							km.previousClusters[i][j] = km.clusters[i][j]; 
 						}
 					}
-
 				}
+				iterations++;
+				System.out.println("Iterations: "+iterations);
 			}
 			
 			List<String> sentencesList = ltc.getSentencesList();
 			HashMap<Integer, Integer> sentenceIndexToClusterCenterSentenceIndexMap = 
 								new HashMap<Integer, Integer>();
+			FileOutputStream fos = null;
 			for(int i=0;i<km.K;i++)
 			{
 				int[] supportingNodes = km.clusters[i];
 				int clustersize = km.clusterCount[i];
 				int centroidSentenceIndex = km.getCentroidSentence(i);
-				System.out.println("Cluster Index"+i+" Sentence: "+ sentencesList.get(centroidSentenceIndex));
-				for(int index = 0; index < clustersize; index++){
+				fos = new FileOutputStream(args[0]+".cluster"+i);
+				
+				fos.write(("Cluster Index"+i+" Sentence: "+ sentencesList.get(centroidSentenceIndex) +"\n")
+						.getBytes("UTF8"));
+				
+				for(int index = 0; index < clustersize; index++)
+				{
 					int supportingSentence = supportingNodes[index];
 					sentenceIndexToClusterCenterSentenceIndexMap.put(supportingSentence, centroidSentenceIndex);
 					if(centroidSentenceIndex != supportingSentence){
-						System.out.println("--> Supporting Sentence: " + sentencesList.get(supportingSentence));
+						fos.write(("--> Supporting Sentence: " + sentencesList.get(supportingSentence) +"\n")
+								.getBytes("UTF8"));
 					}
 				}
+				fos.close();
 			}
 			
 			double lambda = 0.8;
@@ -193,14 +207,15 @@ public class Summarizer
 			
 			List<Map.Entry<String, Double>> sortedMMRList = new ArrayList<>(mmrmdScoresMap.entrySet());
 			Collections.sort(sortedMMRList, sortComparator);
-			System.out.println("MMR MD sentences:");
+			fos = new FileOutputStream(args[0]+".mmrmd");
+			fos.write(("MMR MD sentences: \n").getBytes("UTF8"));
 			for(Map.Entry<String, Double> printCandidate : sortedMMRList)
 			{
-				System.out.println("In Cluster: "+sentencesToClusterCenterMap.get(printCandidate.getKey())
+				fos.write(("In Cluster: "+sentencesToClusterCenterMap.get(printCandidate.getKey())
 						+" Relevance Score: "+myFormat.format(sim1Scores.get(printCandidate.getKey()))
 						+" Anti-Redundancy Score: "+myFormat.format(sim2ScoresMap.get(printCandidate.getKey()))
 						+" MMR Score: "+myFormat.format(printCandidate.getValue())
-						+" Sentence: "+printCandidate.getKey());			
+						+" Sentence: "+printCandidate.getKey()+"\n").getBytes("UTF8"));			
 			}
 		}
 		catch(FileNotFoundException e)

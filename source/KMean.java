@@ -62,6 +62,7 @@ public class KMean
 
 	public boolean hasClustersChanged()
 	{
+		int noOfChanges = 0;
 		for(int clusterIndex = 0; clusterIndex < K; clusterIndex++)
 		{
 			for(int clusterSizeIndex=0;clusterSizeIndex<clusterCount[clusterIndex];clusterSizeIndex++)
@@ -69,11 +70,16 @@ public class KMean
 				if(clusters[clusterIndex][clusterSizeIndex] != 
 							previousClusters[clusterIndex][clusterSizeIndex])
 				{
-					return true;
+					noOfChanges++;
+					//return true;
 				}
 			}
 		}
-		return false;
+		System.out.println("Changes: "+noOfChanges);
+		if(noOfChanges > 0)
+			return true;
+		else
+			return false;
 	}
 	
 	public int[] getInitialClusterCenterIndices()
