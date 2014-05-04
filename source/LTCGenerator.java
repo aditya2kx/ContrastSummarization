@@ -154,35 +154,36 @@ public class LTCGenerator {
 
 		//Calculate the LTC weights
 		for(Map<String, Integer> termMap : documentTermsMap){
-			ltcdenom = 0.0;
-			//Set<String> termSet = termMap.keySet();
-			ltcMap = new HashMap<>();
 			documentTermSet = termMap.keySet();
-			for(String term : documentTermSet){
-				tf = termMap.get(term);
-				isf = inverseDocumentFreqMap.get(term);
+			if(!documentTermSet.isEmpty()){
+				ltcdenom = 0.0;
+				ltcMap = new HashMap<>();
+				for(String term : documentTermSet){
+					tf = termMap.get(term);
+					isf = inverseDocumentFreqMap.get(term);
 
-				ltcnum = ((1.0 + Math.log10(tf)) * Math.log10((double)totalDocs/isf));
-				ltcdenom += Math.pow(ltcnum, 2.0);
+					ltcnum = ((1.0 + Math.log10(tf)) * Math.log10((double)totalDocs/isf));
+					ltcdenom += Math.pow(ltcnum, 2.0);
 
-				ltcMap.put(term, ltcnum);
+					ltcMap.put(term, ltcnum);
 
-				//Category keywords in the document
-				keyword = getSimilarKeyword(keywordSet, term);
-				if(keyword != null){
-					termIndex = keywordsToIndexMap.get(keyword);
-					featureVector[docIter][termIndex] += KEYWORD_FEATURE_WEIGHT;
+					//Category keywords in the document
+					keyword = getSimilarKeyword(keywordSet, term);
+					if(keyword != null){
+						termIndex = keywordsToIndexMap.get(keyword);
+						featureVector[docIter][termIndex] += KEYWORD_FEATURE_WEIGHT;
+					}
 				}
-			}
 
-			//Calculate the feature vector
-			ltcdenom = Math.sqrt(ltcdenom);
-			for(String term : termSet){
-				//Terms in the document
-				termIndex = termToIndexMap.get(term);
-				ltcnum = ltcMap.get(term);
-				ltcnum = (ltcnum == null)  ? 0 : ltcnum;
-				featureVector[docIter][termIndex] = (double) ltcnum/ltcdenom;
+				//Calculate the feature vector
+				ltcdenom = Math.sqrt(ltcdenom);
+				for(String term : termSet){
+					//Terms in the document
+					termIndex = termToIndexMap.get(term);
+					ltcnum = ltcMap.get(term);
+					ltcnum = (ltcnum == null)  ? 0 : ltcnum;
+					featureVector[docIter][termIndex] = (double) ltcnum/ltcdenom;
+				}
 			}
 
 			docIter++;
@@ -202,7 +203,7 @@ public class LTCGenerator {
 	public Map<String, Integer> getKeywordsMap(){
 		return keywordsToIndexMap;
 	}
-	
+
 	public List<String> getSentencesList(){
 		return sentencesList;
 	}
