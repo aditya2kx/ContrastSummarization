@@ -73,10 +73,6 @@ public class EnsembledSentimentAnalyzer {
 	}
 	
 	public static void main(String[] args) throws UnsupportedEncodingException {
-		Properties props = new Properties();
-		props.put("annotators", "tokenize, ssplit, pos, parse");
-		StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
-		
 		System.out.println(EnsembledSentimentAnalyzer.getSentimentClass(5, "i am feeling awesome").getSentimentClass());
 	}
 }
