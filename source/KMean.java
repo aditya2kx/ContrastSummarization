@@ -19,9 +19,12 @@ public class KMean
 	public int clusterCount[]; // # of sentences in cluster i
 	public int previousClusters[][]; //previous clusters;i = cluster no.,j = sentence index
 	public int previousClusterCount[];// # of sentences in previous cluster i
+	LTCGenerator ltc;
 	
-	public KMean(int numberOfClusters, int numberOfSentences, int numberOfFeatures, double dataset[][])         
+	public KMean(int numberOfClusters, int numberOfSentences, int numberOfFeatures, double dataset[][],
+					LTCGenerator ltc)         
 	{
+		this.ltc = ltc;
 		this.K = numberOfClusters; // making cluster size as k-1 DONT KNOW WHY. I guess because we will index from 0.
 		this.numberOfFeatures = numberOfFeatures;
 		this.numberOfSentences = numberOfSentences;
@@ -120,6 +123,30 @@ public class KMean
 		
 	}
 	
+	public double getDistance(double sentence1[], double sentence2[])
+	{
+		double distance = 0;
+		double nodeSentence1 = 0;
+		double nodeSentence2 = 0;
+		for(int featureIndex = 0; featureIndex < numberOfFeatures; featureIndex++)
+		{
+			distance += 
+					(sentence1[featureIndex] * 
+							sentence2[featureIndex]);
+			
+			nodeSentence1 += (sentence1[featureIndex] * 
+					sentence1[featureIndex]);
+			
+			nodeSentence2 += (sentence2[featureIndex] * 
+					sentence2[featureIndex]);
+		}
+		nodeSentence1 = Math.sqrt(nodeSentence1);
+		nodeSentence2 = Math.sqrt(nodeSentence2);
+		distance /= (nodeSentence1 * nodeSentence2);
+		
+		return distance;
+	}
+	
 	public int getCentroidSentence(int clusterIndex)
 	{
 		double maximumDistance = -1;
@@ -151,6 +178,10 @@ public class KMean
 				sentenceIndex = clusters[clusterIndex][clusterSetIndex];
 			}
 		}
+		if(sentenceIndex==-1)
+		{
+			//System.out.println("How !!!");
+		}
 		return sentenceIndex;
 	}
 	
@@ -174,6 +205,10 @@ public class KMean
 		for ( int sentenceIndex = 0; sentenceIndex < numberOfSentences; sentenceIndex++)
 		{
 			// find for a particular sentence, distance from all cluster centers
+			if(sentenceIndex == 1)
+			{
+				//System.out.println();
+			}
 			for ( int clusterCenterIndex = 0; clusterCenterIndex < K; clusterCenterIndex++)
 			{              
 				distanceFromNodeZero[clusterCenterIndex] = 0;
@@ -217,13 +252,27 @@ public class KMean
 			for(int featureIndex = 0; featureIndex < numberOfFeatures; featureIndex++)
 			{ 
 				double totalSum = 0;
+				//System.out.println("----------------------------start----------------------------");
 				for(int clusterSizeIndex = 0; clusterSizeIndex < clusterCount[clusterCenterIndex]; 
 						clusterSizeIndex++)
 				{
+					//System.out.println(vectorList[clusters[clusterCenterIndex][clusterSizeIndex]][featureIndex]);
 					totalSum += vectorList[clusters[clusterCenterIndex][clusterSizeIndex]][featureIndex]; 
+				}
+				//System.out.println("----------------------------end----------------------------");
+				if(clusterCenterIndex==0 && featureIndex==0)
+				{
+					//System.out.println();
 				}
 				totalSum = totalSum / clusterCount[clusterCenterIndex];
 				clusterCenters[clusterCenterIndex][featureIndex] = totalSum;
+			}
+		}
+		for(int clusterCenterIndex = 0; clusterCenterIndex < K; clusterCenterIndex++)
+		{
+			if(clusterCount[clusterCenterIndex]==0)
+			{
+				//System.out.println("HOW !!!");
 			}
 		}
 	}
@@ -251,6 +300,10 @@ public class KMean
 		for(int clusterCenterIndex = 0; clusterCenterIndex < K; clusterCenterIndex++)
 		{
 			System.out.println("\n Cluster no:" +clusterCenterIndex+" Sentence Index are :" );
+			if(clusterCount[clusterCenterIndex]==0)
+			{
+				//System.out.println("HOW !!!");
+			}
 			for(int clusterSizeIndex = 0; clusterSizeIndex < clusterCount[clusterCenterIndex];
 					clusterSizeIndex++)
 			{ 

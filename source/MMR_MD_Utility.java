@@ -35,6 +35,7 @@ public class MMR_MD_Utility
 		List<CoreMap> sentences = document.get(SentencesAnnotation.class);
 		if(sentences.size()>1)
 		{
+			System.out.println(passage);
 			System.out.println("more than 1 sentence... not possible.. bye..");
 			System.exit(1);
 		}
@@ -48,18 +49,19 @@ public class MMR_MD_Utility
 				if(Utils.isSimilar(keywords, word))
 				{
 					score++;
-				}
+				} //near to the cluster center
 			}
 			score = Math.log10(score)/Math.log10(tokens.size());
 		}
 		return score;
 	}
 	
-	public double Similarity_1(String passage, int clusterSize)
+	public double Similarity_1(String passage, double distance, int clusterSize)
 	{
 		double score = 0;		
 		score = weights[0] * similarityPassageAndCategory(passage);
-		score += weights[1] * Math.log10(clusterSize);
+		score += weights[1] * Math.log10(distance);
+		score += weights[2] * Math.log10(clusterSize);
 		return score;
 	}
 	
@@ -106,7 +108,7 @@ public class MMR_MD_Utility
 									datasetForSelectedPassages, noOfSelectedPassages);
 		if(belongsToSelectedCluster)
 		{
-			score += weights[3] * Math.log10((double)(1.0/selectedClusterSize));
+			score += weights[3] / Math.log10((double)(selectedClusterSize));
 		}
 		return score;
 	}

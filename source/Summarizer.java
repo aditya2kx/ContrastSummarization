@@ -4,6 +4,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -14,6 +15,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 public class Summarizer 
 {
 	public static void main(String[] args) 
@@ -21,6 +26,7 @@ public class Summarizer
 		FileInputStream fis = null;
 		BufferedReader br = null;
 		String currentLine = null;
+		String JSONFileContent = "";
 		ArrayList<String> lines = new ArrayList<String>();
 		LTCGenerator ltc;
 		KMean km;
@@ -31,15 +37,40 @@ public class Summarizer
 			br = new BufferedReader(new InputStreamReader(fis));
 			while((currentLine = br.readLine()) !=null)
 			{
-				lines.add(currentLine);
+				JSONFileContent += currentLine;
+				//lines.add(currentLine);
 			}
+			
+			try
+			{
+				JSONObject reviewJSON = new JSONObject(JSONFileContent);
+				JSONArray outputArray = reviewJSON.getJSONArray("output");
+				for(int outputindex=0; outputindex<outputArray.length(); outputindex++)
+				{
+					JSONObject outputJSONObj = outputArray.getJSONObject(outputindex);
+					JSONArray foodArray = outputJSONObj.getJSONObject("categories").getJSONArray("food");
+					for(int foodindex=0; foodindex<foodArray.length(); foodindex++)
+					{
+						String temp = (String) foodArray.get(foodindex);
+						JSONObject foodJSONObj = new JSONObject(temp);//foodArray.get(0)//.getJSONObject(foodindex);
+						lines.add(foodJSONObj.getString("text"));
+					}
+				}
+			}
+			catch(JSONException e)
+			{
+				e.printStackTrace();
+				System.exit(0);
+			}
+
+			
 			ltc = new LTCGenerator(lines, args[1]);
 			double dataset[][] = ltc.calculateTLC();
 			System.out.println(Arrays.toString(ltc.getTermSet()));
 			for(int i = 0; i < dataset.length; i++){
 				System.out.println(Arrays.toString(dataset[i]));
 			}
-			km = new KMean(5, dataset.length, dataset[0].length, dataset);
+			km = new KMean(5, dataset.length, dataset[0].length, dataset, ltc);
 			
 			System.out.println("\n\n");
 			boolean t=true;
@@ -64,25 +95,29 @@ public class Summarizer
 			}
 			
 			List<String> sentencesList = ltc.getSentencesList();
+			HashMap<Integer, Integer> sentenceIndexToClusterCenterSentenceIndexMap = 
+								new HashMap<Integer, Integer>();
 			for(int i=0;i<km.K;i++)
 			{
 				int[] supportingNodes = km.clusters[i];
 				int clustersize = km.clusterCount[i];
 				int centroidSentenceIndex = km.getCentroidSentence(i);
-				System.out.println("Cluster "+i+" Sentence Index: "+ sentencesList.get(km.getCentroidSentence(i)));
+				System.out.println("Cluster Index"+i+" Sentence: "+ sentencesList.get(centroidSentenceIndex));
 				for(int index = 0; index < clustersize; index++){
 					int supportingSentence = supportingNodes[index];
+					sentenceIndexToClusterCenterSentenceIndexMap.put(supportingSentence, centroidSentenceIndex);
 					if(centroidSentenceIndex != supportingSentence){
 						System.out.println("--> Supporting Sentence: " + sentencesList.get(supportingSentence));
 					}
 				}
 			}
 			
-			double lambda = 0.5;
-			double weights[] = {0.6, 0.4, 0.6, 0.4};
+			double lambda = 0.8;
+			double weights[] = {0.2, 0.6, 0.2, 0.6, 0.4};
 			MMR_MD_Utility relevanceRanker = new MMR_MD_Utility(weights, args[1]);
 			HashMap<String, Double> sim1Scores = new HashMap<String, Double>();
 			Map<String, Integer> sentencesToClusterCenterMap = new HashMap<String, Integer>();
+			Map<String, Integer> sentencesToIndexMap = ltc.getSentencesToIndexMap();
 			for(int i=0;i<km.K;i++)
 			{
 				int[] supportingNodes = km.clusters[i];
@@ -91,13 +126,19 @@ public class Summarizer
 				{
 					int supportingSentence = supportingNodes[index];
 					String currentSentence = sentencesList.get(supportingSentence);
-					double score = lambda * relevanceRanker.Similarity_1(currentSentence, clustersize);
+					int centroidSentenceIndex = 
+							sentenceIndexToClusterCenterSentenceIndexMap.get(supportingSentence);
+					String centroidSentence = sentencesList.get(centroidSentenceIndex);
+					double distance = km.getDistance(dataset[sentencesToIndexMap.get(currentSentence)],
+							dataset[sentencesToIndexMap.get(centroidSentence)]);					
+					
+					double score = lambda * 
+									relevanceRanker.Similarity_1(currentSentence, distance, clustersize);
 					sim1Scores.put(currentSentence, score);
 					sentencesToClusterCenterMap.put(currentSentence, i);
 				}
 			}
-			
-			Map<String, Integer> sentencesToIndexMap = ltc.getSentencesToIndexMap();
+			DecimalFormat myFormat = new DecimalFormat("##.##");
 			SortComparator sortComparator = new SortComparator();
 			List<Map.Entry<String, Double>> sortedSim1List = new ArrayList<>(sim1Scores.entrySet());
 			Collections.sort(sortedSim1List, sortComparator);
@@ -106,7 +147,8 @@ public class Summarizer
 			System.out.println("Sim 1 sentences:");
 			for(Map.Entry<String, Double> printCandidate : sortedSim1List)
 			{
-				System.out.println(printCandidate.getKey());
+				System.out.println("Score: "+myFormat.format(printCandidate.getValue())
+									+"Sentence: "+printCandidate.getKey());
 				mmrmdScoresMap.put(printCandidate.getKey(), printCandidate.getValue());
 			}
 			
@@ -142,7 +184,8 @@ public class Summarizer
 			System.out.println("Sim 2 sentences:");
 			for(Map.Entry<String, Double> printCandidate : sortedSim2List)
 			{
-				System.out.println(printCandidate.getKey());
+				System.out.println("Score: "+myFormat.format(printCandidate.getValue())
+						+"Sentence: "+printCandidate.getKey());
 				mmrmdScoresMap.put(printCandidate.getKey(), 
 						mmrmdScoresMap.get(printCandidate.getKey()) - printCandidate.getValue());
 			}
@@ -152,7 +195,11 @@ public class Summarizer
 			System.out.println("MMR MD sentences:");
 			for(Map.Entry<String, Double> printCandidate : sortedMMRList)
 			{
-				System.out.println(printCandidate.getKey());
+				System.out.println("In Cluster: "+sentencesToClusterCenterMap.get(printCandidate.getKey())
+						+" Relevance Score: "+myFormat.format(sim1Scores.get(printCandidate.getKey()))
+						+" Anti-Redundancy Score: "+myFormat.format(sim2ScoresMap.get(printCandidate.getKey()))
+						+" MMR Score: "+myFormat.format(printCandidate.getValue())
+						+" Sentence: "+printCandidate.getKey());			
 			}
 		}
 		catch(FileNotFoundException e)
