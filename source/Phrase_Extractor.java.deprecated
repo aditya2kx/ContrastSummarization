@@ -171,7 +171,7 @@ public class Phrase_Extractor
 				}
 
 				if(buffer.length() > 0){
-					out1.write(("---> " + buffer.toString()).getBytes());
+					out1.write((buffer.toString()).getBytes());
 					out1.write("\n".getBytes());
 				}
 				buffer.setLength(0);
@@ -244,7 +244,8 @@ public class Phrase_Extractor
 					}
 					catch(JSONException e)
 					{
-						System.out.println("Line: "+currentLine+" not a json object");
+						System.out.println("Json Parse error: "+currentLine+" not a json object");
+						e.printStackTrace();
 						System.exit(1);
 					}
 					String text = json.getString("text");
@@ -256,10 +257,8 @@ public class Phrase_Extractor
 					//List<Tree> leaves = tree.getLeaves();
 					//tree.indentedListPrint();
 					//phraseExtract(tree, fos, fos_rule1, fos_rule2);
-					fos.write(text.getBytes());
 					fos.write("\n".getBytes());
-					phraseExtract_approach1(tree, fos);
-					//phraseExtract(tree, fos);
+					phraseExtract(tree, fos);
 				}
 			}
 		}
@@ -276,7 +275,7 @@ public class Phrase_Extractor
 			e.printStackTrace();
 		}
 	}
-
+	
 	public static void phraseExtract(Tree tree, OutputStream fos) throws IOException{
 		List<Tree> subTrees = tree.getChildrenAsList();
 		List<Tree> childLeaves;
@@ -289,7 +288,7 @@ public class Phrase_Extractor
 						if(containsKeywordMatch(childTree)){
 							childLeaves = childTree.getLeaves();
 							leavesAsString = getLeavesAsString(childLeaves);
-							fos.write(("---> " + leavesAsString).getBytes());
+							fos.write(leavesAsString.getBytes());
 							fos.write("\n".getBytes());
 						}
 					}
@@ -297,7 +296,7 @@ public class Phrase_Extractor
 					if(containsKeywordMatch(parentTree)){
 						childLeaves = parentTree.getLeaves();
 						leavesAsString = getLeavesAsString(childLeaves);
-						fos.write(("---> " + leavesAsString).getBytes());
+						fos.write(leavesAsString.getBytes());
 						fos.write("\n".getBytes());
 					}
 				}
@@ -305,7 +304,7 @@ public class Phrase_Extractor
 				if(containsKeywordMatch(parentTree)){
 					childLeaves = parentTree.getLeaves();
 					leavesAsString = getLeavesAsString(childLeaves);
-					fos.write(("---> " + leavesAsString).getBytes());
+					fos.write(leavesAsString.getBytes());
 					fos.write("\n".getBytes());
 				}
 			}

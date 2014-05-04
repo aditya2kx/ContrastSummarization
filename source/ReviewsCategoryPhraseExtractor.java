@@ -14,26 +14,20 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
-import uk.ac.shef.wit.simmetrics.similaritymetrics.JaroWinkler;
 import uk.ac.shef.wit.simmetrics.similaritymetrics.Levenshtein;
-import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
-import edu.stanford.nlp.util.CoreMap;
 
-public class KeywordSimilarityWithReviews {
-
-	private static Set<String> keywordSet;
-
-	private static JaroWinkler jaroWinkler;
+public class ReviewsCategoryPhraseExtractor {
 
 	private static Levenshtein levenshtein;
-	
+
 	private static Set<String> skipWordsSet;
 	//private static JaccardSimilarity jc;
 
@@ -43,8 +37,6 @@ public class KeywordSimilarityWithReviews {
 			System.exit(0);
 		}
 
-		//"C:\Users\Santosh\google drive\Natural Language Processing Project\Dataset"
-		//"C:\\Users\\Santosh\\google drive\\Natural Language Processing Project\\Dataset\\\yelp_phoenix_academic_dataset.rest_reviews_splitsplitter_out\\review-sentences-file-15"
 		Properties props = new Properties();
 		props.put("annotators", "tokenize, ssplit");
 		StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
@@ -56,14 +48,9 @@ public class KeywordSimilarityWithReviews {
 		String outputFile = args[1]+".out";
 
 		String readLine;
-		keywordSet = new HashSet<>();
-		//keywords file
-		try(BufferedReader reader = new BufferedReader(new FileReader(new File(keywordsFile)))){
-			while((readLine = reader.readLine()) != null){
-				keywordSet.add(readLine);
-			}
-		}
-		
+		Set<String> keywordsSet;
+		Map<String, Set<String>> categoryKeywordsMap = KeywordsFetcher.getInstance(keywordsFile).getCategoryKeywordsMap();
+
 		//Read the skip words
 		skipWordsSet = new HashSet<>();
 		try(BufferedReader reader = new BufferedReader(new FileReader(new File(skipWordsFile)))){
@@ -73,60 +60,91 @@ public class KeywordSimilarityWithReviews {
 		}
 
 		//Create the jaro winkler instance
-		jaroWinkler = new JaroWinkler();
 		levenshtein = new Levenshtein();
 
 		//sentences file
-		//"keyword_training_sentences_file_test"
-		int totalReviews = 0;
-		int categoryReviews = 0;
 		JSONObject jsonObject;
 		String reviewText;
-		int rating;
+		int rating, reviewId = 0;
+		List<String> phrasesList;
+		Annotation phraseSentenceDocument;
+		List<CoreLabel> tokensList; boolean containsMatch;
+		Map<Integer, List<String>> ngramMap;
+		PhraseExtractor phraseExtractor = PhraseExtractor.getInstance();
+		
+		/*JsonFactory jsonFactory = new JsonFactory();
+		JsonGenerator jsonGenerator = jsonFactory.createGenerator(Files.newOutputStream(Paths.get(outputFile)));
+		jsonGenerator.useDefaultPrettyPrinter();
+		ObjectMapper objectMapper = new ObjectMapper();*/
+		
+		JSONArray inputObject = new JSONArray();
+		JSONArray outputObject = new JSONArray();
+		JSONObject reviewPhraseObject, categoryObject;
 		try(BufferedWriter writer = new BufferedWriter(new FileWriter(new File(outputFile)));
 				BufferedReader reader = new BufferedReader(new FileReader(new File(sentencesFile)))){
 			while((readLine = reader.readLine()) != null){
-				System.out.println(readLine);
 				jsonObject = new JSONObject(readLine);
 				reviewText = jsonObject.getString("text");
 				rating = jsonObject.getInt("stars");
-				
-				Annotation document = new Annotation(reviewText);
-				pipeline.annotate(document);
-				List<CoreMap> sentences = document.get(SentencesAnnotation.class);
-				totalReviews += sentences.size();
-				for(CoreMap sentence: sentences)
-				{
-					String outputReview = getReviewSentence(sentence);
-					if(outputReview != null){
-						writer.write(getJsonString(rating, outputReview));
-						writer.write("\n");
-						categoryReviews++;
+				reviewId++;
+
+				categoryObject = new JSONObject();
+				phrasesList = phraseExtractor.getExtractedPhrases(reviewText);
+				for(String phraseSentence : phrasesList){
+					phraseSentenceDocument = new Annotation(phraseSentence);
+					pipeline.annotate(phraseSentenceDocument);
+					tokensList = phraseSentenceDocument.get(TokensAnnotation.class);
+					ngramMap = getNgramsMap(tokensList);
+
+					for(String category : categoryKeywordsMap.keySet()){
+						keywordsSet = categoryKeywordsMap.get(category);
+						containsMatch = getReviewSentence(tokensList, ngramMap, keywordsSet);
+						if(containsMatch){
+							categoryObject.append(category, getJsonStringForPhrase(rating, phraseSentence.toString()));
+						}
 					}
 				}
+				
+				//Append to the existing input object
+				inputObject.put(getJsonStringForReview(reviewId, reviewText));
+				
+				//Each review phrase object
+				reviewPhraseObject = new JSONObject();
+				reviewPhraseObject.put("review_id", reviewId);
+				reviewPhraseObject.put("categories", categoryObject);
+				
+				//Append to the existing output object
+				outputObject.put(reviewPhraseObject);
 			}
 		}
-		
-		System.out.println("Total Reviews: " + totalReviews);
-		System.out.println("Category Wise Reviews: " + categoryReviews);
-		System.out.println("Percentage of Category Wise Reviews: " + (categoryReviews * 100.0/totalReviews)+"%");
+
+		try(BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile))){
+			writer.append("{\n");
+			writer.append("\"input\":");
+			writer.append(inputObject.toString(1));
+			writer.append(",\"output\":");
+			writer.append(outputObject.toString(1));
+			writer.append("\n}");
+		}
 	}
-	
-	private static String getJsonString(int stars, String reviewText){
+
+	private static String getJsonStringForPhrase(int stars, String categoryPhrase){
 		JSONObject jsonObj = new JSONObject();
 		jsonObj.put("stars", stars);
+		jsonObj.put("text", categoryPhrase);
+
+		return jsonObj.toString();
+	}
+	
+	private static String getJsonStringForReview(int reviewId, String reviewText){
+		JSONObject jsonObj = new JSONObject();
+		jsonObj.put("review_id", reviewId);
 		jsonObj.put("text", reviewText);
-		
+
 		return jsonObj.toString();
 	}
 
-	private static String getReviewSentence(CoreMap sentence){
-		Map<Integer, List<String>> ngramMap = new HashMap<>();
-		List<CoreLabel> coreLabelList = sentence.get(TokensAnnotation.class);
-		ngramMap.put(1, getUnigrams(coreLabelList));
-		ngramMap.put(2, getBigrams(coreLabelList));
-		ngramMap.put(3, getTrigrams(coreLabelList));
-
+	private static boolean getReviewSentence(List<CoreLabel> coreLabelList, Map<Integer, List<String>> ngramMap, Set<String> keywordSet){
 		for(String keyword : keywordSet){
 			int wordLen = keyword.split("\\s+").length;
 			List<String> ngramsList = ngramMap.get(wordLen);
@@ -140,13 +158,22 @@ public class KeywordSimilarityWithReviews {
 						&& !skipWordsSet.contains(term.toLowerCase())){
 					float score = levenshtein.getSimilarity(keyword, term);
 					if(score >= 0.8){
-						return sentence.toString();// + "->->" + keyword + "->->" + score;
+						return true;// + "->->" + keyword + "->->" + score;
 					}
 				}
 			}
 		}
 
-		return null;
+		return false;
+	}
+
+	private static Map<Integer, List<String>> getNgramsMap(
+			List<CoreLabel> coreLabelList) {
+		Map<Integer, List<String>> ngramMap = new HashMap<>();
+		ngramMap.put(1, getUnigrams(coreLabelList));
+		ngramMap.put(2, getBigrams(coreLabelList));
+		ngramMap.put(3, getTrigrams(coreLabelList));
+		return ngramMap;
 	}
 
 	private static List<String> getNgrams(List<CoreLabel> coreLabelList, int ngram){
@@ -199,29 +226,5 @@ public class KeywordSimilarityWithReviews {
 
 		return unigramSet;
 	}
-
-	/*private static boolean wordMatches(String word, String keyword){
-		return jaroWinkler.getSimilarity(keyword, word) > 0.96;
-	}
-
-	private static boolean wordMatches(String word){
-		for(String keyword : keywordSet){
-			float score = jaroWinkler.getSimilarity(keyword, word);
-			if(score > 0.96){
-				return true;
-			}
-		}
-		return false;
-	}
-
-	private static float wordMatchesWithScore(String word){
-		for(String keyword : keywordSet){
-			float score = jaroWinkler.getSimilarity(keyword, word);
-			if(score > 0.96){
-				return score;
-			}
-		}
-		return Float.MIN_VALUE;
-	}*/
 
 }
