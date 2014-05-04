@@ -2,7 +2,9 @@ package source;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Map;
+import java.util.Properties;
 
+import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import static source.SentimentClass.Positive;
 import static source.SentimentClass.Negative;
 import static source.SentimentClass.Neutral;
@@ -23,7 +25,7 @@ public class EnsembledSentimentAnalyzer {
 		ratingScoreUtil[5] = 1;
 	}
 
-	public static SentimentClass getSentimentClass(int rating, String reviewText) throws UnsupportedEncodingException{
+	public static SentimentMeta getSentimentClass(int rating, String reviewText) throws UnsupportedEncodingException{
 		double ratingScore = ratingScoreUtil[rating];
 		
 		//Splat Service
@@ -42,13 +44,39 @@ public class EnsembledSentimentAnalyzer {
 		double ensembledScore = 0.25 * splatFinalScore + 0.25 * stanfordFinalScore + 0.5 * ratingScore;
 
 		if(ensembledScore >= -0.05 && ensembledScore <= 0.05){
-			return Neutral;
+			return new SentimentMeta(Neutral, ensembledScore);
 		}else if(ensembledScore > 0.05){
-			return Positive;
+			return new SentimentMeta(Positive, ensembledScore);
 		}else if(ensembledScore < -0.05){
-			return Negative;
+			return new SentimentMeta(Negative, ensembledScore);
 		}
 		
 		return null;
+	}
+	
+	public static class SentimentMeta {
+		private SentimentClass sentimentClass;
+		private double ensembledScore;
+		
+		public SentimentMeta(SentimentClass sentimentClass, double ensembledScore){
+			this.sentimentClass = sentimentClass;
+			this.ensembledScore = ensembledScore;
+		}
+
+		public SentimentClass getSentimentClass() {
+			return sentimentClass;
+		}
+
+		public double getEnsembledScore() {
+			return ensembledScore;
+		}
+	}
+	
+	public static void main(String[] args) throws UnsupportedEncodingException {
+		Properties props = new Properties();
+		props.put("annotators", "tokenize, ssplit, pos, parse");
+		StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
+		
+		System.out.println(EnsembledSentimentAnalyzer.getSentimentClass(5, "i am feeling awesome").getSentimentClass());
 	}
 }

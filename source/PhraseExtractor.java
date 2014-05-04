@@ -21,9 +21,7 @@ public class PhraseExtractor {
 	private StanfordCoreNLP pipeline;
 
 	private PhraseExtractor(){
-		Properties props = new Properties();
-		props.put("annotators", "tokenize, ssplit, pos, parse");
-		pipeline = new StanfordCoreNLP(props);
+		pipeline = StanfordLoadAnnotaters.getInstance().getPipeLine();
 	}
 
 	public static PhraseExtractor getInstance(){

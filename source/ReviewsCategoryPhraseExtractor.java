@@ -7,6 +7,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -17,6 +18,7 @@ import java.util.Set;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import source.EnsembledSentimentAnalyzer.SentimentMeta;
 import uk.ac.shef.wit.simmetrics.similaritymetrics.Levenshtein;
 import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
@@ -29,23 +31,19 @@ public class ReviewsCategoryPhraseExtractor {
 	private static Levenshtein levenshtein;
 
 	private static Set<String> skipWordsSet;
-	//private static JaccardSimilarity jc;
 
 	public static void main(String[] args) throws FileNotFoundException, IOException {
 		if(args.length < 3){
 			System.err.println("Usage: KeywordSimilarityWithReviews <keywords-file> <sentences-input-file> <skip-words-list>");
 			System.exit(0);
 		}
-
-		Properties props = new Properties();
-		props.put("annotators", "tokenize, ssplit");
-		StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
+		
+		long startTime = new Date().getTime();
 
 		String keywordsFile = args[0];//"aggregate_keywords_file.txt";
-		//String sentencesFile = "yelp_phoenix_academic_dataset.rest_reviews_split";
 		String sentencesFile = args[1];//"TestFile";
 		String skipWordsFile = args[2];
-		String outputFile = args[1]+".out";
+		String outputFile = args[1]+".out.1";
 
 		String readLine;
 		Set<String> keywordsSet;
@@ -61,21 +59,20 @@ public class ReviewsCategoryPhraseExtractor {
 
 		//Create the jaro winkler instance
 		levenshtein = new Levenshtein();
-
+		
+		//Load the pipeline
+		StanfordCoreNLP pipeline = StanfordLoadAnnotaters.getInstance().getPipeLine();
+		
 		//sentences file
 		JSONObject jsonObject;
-		String reviewText;
+		String reviewText, phraseReviewText;
 		int rating, reviewId = 0;
 		List<String> phrasesList;
+		SentimentMeta sentimentMeta;
 		Annotation phraseSentenceDocument;
 		List<CoreLabel> tokensList; boolean containsMatch;
 		Map<Integer, List<String>> ngramMap;
 		PhraseExtractor phraseExtractor = PhraseExtractor.getInstance();
-		
-		/*JsonFactory jsonFactory = new JsonFactory();
-		JsonGenerator jsonGenerator = jsonFactory.createGenerator(Files.newOutputStream(Paths.get(outputFile)));
-		jsonGenerator.useDefaultPrettyPrinter();
-		ObjectMapper objectMapper = new ObjectMapper();*/
 		
 		JSONArray inputObject = new JSONArray();
 		JSONArray outputObject = new JSONArray();
@@ -100,7 +97,9 @@ public class ReviewsCategoryPhraseExtractor {
 						keywordsSet = categoryKeywordsMap.get(category);
 						containsMatch = getReviewSentence(tokensList, ngramMap, keywordsSet);
 						if(containsMatch){
-							categoryObject.append(category, getJsonStringForPhrase(rating, phraseSentence.toString()));
+							phraseReviewText = phraseSentence.toString();
+							sentimentMeta = EnsembledSentimentAnalyzer.getSentimentClass(rating, phraseReviewText);
+							categoryObject.append(category, getJsonStringForPhrase(rating, phraseReviewText, sentimentMeta));
 						}
 					}
 				}
@@ -118,6 +117,7 @@ public class ReviewsCategoryPhraseExtractor {
 			}
 		}
 
+		//Write the json file
 		try(BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile))){
 			writer.append("{\n");
 			writer.append("\"input\":");
@@ -126,12 +126,17 @@ public class ReviewsCategoryPhraseExtractor {
 			writer.append(outputObject.toString(1));
 			writer.append("\n}");
 		}
+		
+		long endTime = new Date().getTime();
+		System.out.println("Time taken: " + ((double) endTime - startTime)/1000 + " secs..");
 	}
 
-	private static String getJsonStringForPhrase(int stars, String categoryPhrase){
+	private static String getJsonStringForPhrase(int stars, String categoryPhrase, SentimentMeta sentimentMeta){
 		JSONObject jsonObj = new JSONObject();
 		jsonObj.put("stars", stars);
 		jsonObj.put("text", categoryPhrase);
+		jsonObj.put("senti_score", sentimentMeta.getEnsembledScore());
+		jsonObj.put("senti_label", sentimentMeta.getSentimentClass().toString());
 
 		return jsonObj.toString();
 	}

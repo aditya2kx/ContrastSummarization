@@ -24,9 +24,7 @@ public class StanfordSentimentAnalysis
 	  
 	public StanfordSentimentAnalysis()
 	{
-		props = new Properties();
-		props.setProperty("annotators", "tokenize, ssplit, parse, sentiment");
-		pipeline = new StanfordCoreNLP(props);
+		pipeline = StanfordLoadAnnotaters.getInstance().getPipeLine();
 	}
 	  
 	/* Usage
