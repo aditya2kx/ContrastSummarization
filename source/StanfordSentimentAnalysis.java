@@ -21,12 +21,12 @@ public class StanfordSentimentAnalysis
 	private static final NumberFormat NF = new DecimalFormat("0.0000");
 	Properties props;
 	StanfordCoreNLP pipeline;
-	  
+
 	public StanfordSentimentAnalysis()
 	{
 		pipeline = StanfordLoadAnnotaters.getInstance().getPipeLine();
 	}
-	  
+
 	/* Usage
 	 * StanfordSentimentAnalysis sent = new StanfordSentimentAnalysis();
 		Map<String, Object> stats = sent.getScore(text);
@@ -35,29 +35,30 @@ public class StanfordSentimentAnalysis
 	{
 		Map<SentimentClass, Double> stats = new HashMap<SentimentClass, Double>();
 		Annotation document = new Annotation(text);
-	    pipeline.annotate(document);
-	    List<CoreMap> sentences = document.get(SentencesAnnotation.class);
-	    if(sentences.size()!=1)
-	    {
-	    	System.out.println("Input text is not 1 sentence");
-	    	System.exit(1);
-	    }
-	    CoreMap sentence = sentences.get(0); 
-	    Tree tree = sentence.get(SentimentCoreAnnotations.AnnotatedTree.class);
-	    if (tree.isLeaf()) 
-	    {
-	    	System.out.println("Input text has improper format");
-	    	System.exit(1);
-	    }
-	    SimpleMatrix vector = RNNCoreAnnotations.getPredictions(tree);
-	    double posScore = 0;
-	    double negScore = 0;
-	    posScore += Double.parseDouble(NF.format(vector.get(3)));
-	    posScore += Double.parseDouble(NF.format(vector.get(4)));
-	    negScore += Double.parseDouble(NF.format(vector.get(0)));
-	    negScore += Double.parseDouble(NF.format(vector.get(1)));
-	    stats.put(SentimentClass.Positive, posScore);
-    	stats.put(SentimentClass.Negative, negScore);
-	    return stats;
+		pipeline.annotate(document);
+		List<CoreMap> sentences = document.get(SentencesAnnotation.class);
+		if(sentences.size()!=1)
+		{
+			System.out.println("Warning: Input text is not 1 sentence");
+			System.out.println(text);
+			//System.exit(1);
+		}
+		CoreMap sentence = sentences.get(0); 
+		Tree tree = sentence.get(SentimentCoreAnnotations.AnnotatedTree.class);
+		if (tree.isLeaf()) 
+		{
+			System.out.println("Input text has improper format");
+			System.exit(1);
+		}
+		SimpleMatrix vector = RNNCoreAnnotations.getPredictions(tree);
+		double posScore = 0;
+		double negScore = 0;
+		posScore += Double.parseDouble(NF.format(vector.get(3)));
+		posScore += Double.parseDouble(NF.format(vector.get(4)));
+		negScore += Double.parseDouble(NF.format(vector.get(0)));
+		negScore += Double.parseDouble(NF.format(vector.get(1)));
+		stats.put(SentimentClass.Positive, posScore);
+		stats.put(SentimentClass.Negative, negScore);
+		return stats;
 	}
 }
