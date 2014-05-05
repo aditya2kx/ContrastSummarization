@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry excluding="Jars/JSON-java-master/|Jars/JSON-java-master/|Jars/JSON-java-master/|Jars/JSON-java-master/" kind="src" path=""/>
+	<classpathentry excluding="Jars/JSON-java-master/|Jars/JSON-java-master/|Jars/JSON-java-master/|Jars/JSON-java-master/|src/main/resources/" kind="src" path=""/>
+	<classpathentry kind="src" path="src/main/resources"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
 	<classpathentry kind="lib" path="Jars/ejml-0.23.jar"/>
 	<classpathentry kind="lib" path="Jars/joda-time-2.1-sources.jar"/>
@@ -18,9 +19,19 @@
 	<classpathentry kind="lib" path="Jars/commons-codec-1.4.jar"/>
 	<classpathentry kind="lib" path="Jars/scribe-1.1.0.jar"/>
 	<classpathentry kind="lib" path="Jars/jersey-client-1.18.1.jar"/>
-	<classpathentry kind="lib" path="Jars/jersey-core-1.17.1.jar"/>
 	<classpathentry kind="lib" path="Jars/jackson-core-2.2.3.jar"/>
 	<classpathentry kind="lib" path="Jars/jackson-annotations-2.2.3.jar"/>
 	<classpathentry kind="lib" path="Jars/jackson-databind-2.2.3.jar"/>
+	<classpathentry kind="lib" path="Jars/asm-3.3.1.jar"/>
+	<classpathentry kind="lib" path="Jars/jsr311-api-1.1.1.jar"/>
+	<classpathentry kind="lib" path="Jars/grizzly-framework-2.3.11.jar"/>
+	<classpathentry kind="lib" path="Jars/grizzly-http-2.3.11.jar"/>
+	<classpathentry kind="lib" path="Jars/grizzly-http-server-2.3.11.jar"/>
+	<classpathentry kind="lib" path="Jars/jersey-core-1.18.1.jar"/>
+	<classpathentry kind="lib" path="Jars/jersey-grizzly2-1.18.1.jar"/>
+	<classpathentry kind="lib" path="Jars/jersey-grizzly2-servlet-1.18.1.jar"/>
+	<classpathentry kind="lib" path="Jars/jersey-json-1.18.1.jar"/>
+	<classpathentry kind="lib" path="Jars/jersey-server-1.18.1.jar"/>
+	<classpathentry kind="lib" path="Jars/jersey-servlet-1.18.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

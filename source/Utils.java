@@ -2,8 +2,8 @@ package source;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -34,7 +34,8 @@ public class Utils {
 
 	private static void readStopWords() throws FileNotFoundException, IOException{
 		stopWordsSet = new HashSet<>();
-		try(BufferedReader bufReader = new BufferedReader(new FileReader("stop-words.txt"))){
+		
+		try(BufferedReader bufReader = new BufferedReader(new InputStreamReader(ClassLoader.getSystemResourceAsStream("stop-words.txt")))){
 			String readLine;
 			while((readLine = bufReader.readLine()) != null){
 				stopWordsSet.add(readLine.toLowerCase());
@@ -44,7 +45,7 @@ public class Utils {
 	
 	private static void readSkipWords() throws FileNotFoundException, IOException{
 		skipWordsSet = new HashSet<>();
-		try(BufferedReader bufReader = new BufferedReader(new FileReader("skip-words.txt"))){
+		try(BufferedReader bufReader = new BufferedReader(new InputStreamReader(ClassLoader.getSystemResourceAsStream("skip-words.txt")))){
 			String readLine;
 			while((readLine = bufReader.readLine()) != null){
 				skipWordsSet.add(readLine.toLowerCase());
@@ -84,5 +85,9 @@ public class Utils {
 		}
 		
 		return null;
+	}
+	
+	public static void main(String[] args) {
+		System.out.println(getStopWords());
 	}
 }
