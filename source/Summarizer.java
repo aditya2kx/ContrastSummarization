@@ -7,10 +7,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -21,6 +21,47 @@ import org.json.JSONObject;
 
 public class Summarizer 
 {
+	static int NoOfClusters = 5;
+	
+	private static int minimumIndex(double array[])
+	{
+		double minimumValue = Double.MAX_VALUE;
+		int minimumIndex = -1;
+		for(int index=0; index<array.length; index++)
+		{
+			if(minimumValue > array[index])
+			{
+				minimumValue = array[index];
+				minimumIndex = index;
+			}
+		}
+		return minimumIndex;
+	}
+	
+	private static void setSentencesLengthForEachCluster(int noOfSentencesPerCluster[], 
+			int sizeOfEachCluster[], int noOfSentencesInSummary, int totalSentences)
+	{
+		//Stride Algorithm
+		if(noOfSentencesInSummary < NoOfClusters)
+		{
+			System.out.println("Warning: To get a good summary have alteast sentences equal to number of clusters");
+			System.exit(1);
+		}
+		System.out.println("");
+		double stridesPerCluster[] = new double[NoOfClusters];
+		for(int strideIndex=0; strideIndex < NoOfClusters; strideIndex++)
+		{
+			stridesPerCluster[strideIndex] = (totalSentences * 1.0) / sizeOfEachCluster[strideIndex];
+		}
+		double passValuesPerCluster[] = Arrays.copyOf(stridesPerCluster, stridesPerCluster.length);
+		for(int sizeIndex=0; sizeIndex<noOfSentencesInSummary; sizeIndex++)
+		{
+			int minIndex = minimumIndex(passValuesPerCluster);
+			noOfSentencesPerCluster[minIndex]++;
+			passValuesPerCluster[minIndex] += stridesPerCluster[minIndex];
+		}
+	}
+	
 	public static void main(String[] args) 
 	{
 		FileInputStream fis = null;
@@ -48,15 +89,19 @@ public class Summarizer
 				for(int outputindex=0; outputindex<outputArray.length(); outputindex++)
 				{
 					JSONObject outputJSONObj = outputArray.getJSONObject(outputindex);
-					System.out.println(outputJSONObj.toString());
+					//System.out.println(outputJSONObj.toString());
 					if(outputJSONObj.getJSONObject("categories").has("food"))
 					{	
 						JSONArray foodArray = outputJSONObj.getJSONObject("categories").getJSONArray("food");
 						for(int foodindex=0; foodindex<foodArray.length(); foodindex++)
 						{
-							String temp = (String) foodArray.get(foodindex);
-							JSONObject foodJSONObj = new JSONObject(temp);//foodArray.get(0)//.getJSONObject(foodindex);
-							lines.add(foodJSONObj.getString("text"));
+							String currentReviewItem = (String) foodArray.get(foodindex);
+							JSONObject foodJSONObj = new JSONObject(currentReviewItem);
+							if(foodJSONObj.has("senti_label") && 
+									foodJSONObj.getString("senti_label").equalsIgnoreCase("positive"))
+							{
+								lines.add(foodJSONObj.getString("text"));
+							}
 						}
 					}
 				}
@@ -75,7 +120,7 @@ public class Summarizer
 			for(int i = 0; i < dataset.length; i++){
 				System.out.println(Arrays.toString(dataset[i]));
 			}*/
-			km = new KMean(5, dataset.length, dataset[0].length, dataset, ltc);
+			km = new KMean(NoOfClusters, dataset.length, dataset[0].length, dataset, ltc);
 			
 			System.out.println("\n\n");
 			boolean t=true;
@@ -101,6 +146,14 @@ public class Summarizer
 				System.out.println("Iterations: "+iterations);
 			}
 			
+			int noOfSentencesFromEachCluster[] = new int[NoOfClusters];
+			Arrays.fill(noOfSentencesFromEachCluster, 1);
+			int noOfSentencesInSummary = 10;
+			noOfSentencesInSummary -= NoOfClusters;
+			setSentencesLengthForEachCluster(noOfSentencesFromEachCluster, km.clusterCount, 
+					noOfSentencesInSummary, dataset.length);
+			
+			
 			List<String> sentencesList = ltc.getSentencesList();
 			HashMap<Integer, Integer> sentenceIndexToClusterCenterSentenceIndexMap = 
 								new HashMap<Integer, Integer>();
@@ -119,7 +172,8 @@ public class Summarizer
 				{
 					int supportingSentence = supportingNodes[index];
 					sentenceIndexToClusterCenterSentenceIndexMap.put(supportingSentence, centroidSentenceIndex);
-					if(centroidSentenceIndex != supportingSentence){
+					if(centroidSentenceIndex != supportingSentence)
+					{
 						fos.write(("--> Supporting Sentence: " + sentencesList.get(supportingSentence) +"\n")
 								.getBytes("UTF8"));
 					}
@@ -127,14 +181,16 @@ public class Summarizer
 				fos.close();
 			}
 			
-			double lambda = 0.8;
-			double weights[] = {0.2, 0.6, 0.2, 0.6, 0.4};
+			double lambda = 0.5;
+			double weights[] = {0.4, 0.6, 0.0, 1.0, 0.0};
 			MMR_MD_Utility relevanceRanker = new MMR_MD_Utility(weights, keywordsSet);
-			HashMap<String, Double> sim1Scores = new HashMap<String, Double>();
+			List<HashMap<String, Double>> sim1ScoresList = new ArrayList<HashMap<String, Double>>();
 			Map<String, Integer> sentencesToClusterCenterMap = new HashMap<String, Integer>();
 			Map<String, Integer> sentencesToIndexMap = ltc.getSentencesToIndexMap();
+			double maxSim1Score = -1;
 			for(int i=0;i<km.K;i++)
 			{
+				HashMap<String, Double> sim1ScoresCurrentCuster =  new HashMap<String, Double>();
 				int[] supportingNodes = km.clusters[i];
 				int clustersize = km.clusterCount[i];
 				for(int index = 0; index < clustersize; index++)
@@ -148,74 +204,132 @@ public class Summarizer
 							dataset[sentencesToIndexMap.get(centroidSentence)]);					
 					
 					double score = lambda * 
-									relevanceRanker.Similarity_1(currentSentence, distance, clustersize);
-					sim1Scores.put(currentSentence, score);
+									relevanceRanker.Similarity_1(currentSentence, distance);//, clustersize);
+					if(maxSim1Score < score)
+					{
+						maxSim1Score = score;
+					}
+					sim1ScoresCurrentCuster.put(currentSentence, score);
 					sentencesToClusterCenterMap.put(currentSentence, i);
 				}
+				sim1ScoresList.add(sim1ScoresCurrentCuster);
 			}
 			DecimalFormat myFormat = new DecimalFormat("##.##");
 			SortComparator sortComparator = new SortComparator();
-			List<Map.Entry<String, Double>> sortedSim1List = new ArrayList<>(sim1Scores.entrySet());
-			Collections.sort(sortedSim1List, sortComparator);
+			ArrayList<ArrayList<Map.Entry<String, Double>>> sortedSim1ListPerCluster = 
+					new ArrayList<ArrayList<Map.Entry<String, Double>>>();
 			
-			Map<String, Double> mmrmdScoresMap = new HashMap<>();
-			System.out.println("Sim 1 sentences:");
-			for(Map.Entry<String, Double> printCandidate : sortedSim1List)
+			for(int clusterIndex=0; clusterIndex<sim1ScoresList.size(); clusterIndex++)
 			{
-				System.out.println("Score: "+myFormat.format(printCandidate.getValue())
-									+"Sentence: "+printCandidate.getKey());
-				mmrmdScoresMap.put(printCandidate.getKey(), printCandidate.getValue());
+				ArrayList<Map.Entry<String, Double>> sortedSim1List = 
+						new ArrayList<Map.Entry<String, Double>>(sim1ScoresList.get(clusterIndex).entrySet());
+				Collections.sort(sortedSim1List, sortComparator);
+				sortedSim1ListPerCluster.add(sortedSim1List);
+			}
+			
+			List<HashMap<String, Double>> mmrmdScoresMapList = new ArrayList<HashMap<String, Double>>();
+			System.out.println("Sim 1 sentences:");
+			for(int clusterIndex=0; clusterIndex<sortedSim1ListPerCluster.size(); clusterIndex++)
+			{
+				ArrayList<Map.Entry<String, Double>> sortedSim1List = sortedSim1ListPerCluster.get(clusterIndex);
+				HashMap<String, Double> mmrmdScoresMap = new HashMap<String, Double>();
+				for(Map.Entry<String, Double> printCandidate : sortedSim1List)
+				{
+					//can normalize before adding score
+					mmrmdScoresMap.put(printCandidate.getKey(), printCandidate.getValue());
+				}
+				mmrmdScoresMapList.add(mmrmdScoresMap);
 			}
 			
 			//Similarity 2 scores
-			Map<String, Double> sim2ScoresMap = new HashMap<>();
-			double[][] selectedPassages = new double[dataset.length][dataset[0].length];
-			int noOfSelectedPassages = 0;
-			double[] featureVector;
-			double sim2Score;
-			Set<Integer> selectedCluster = new HashSet<Integer>();
-			for(Map.Entry<String, Double> candidates : sortedSim1List)
+			List<HashMap<String, Double>> sim2ScoresList = new ArrayList<HashMap<String, Double>>();
+			for(int clusterIndex=0; clusterIndex<sortedSim1ListPerCluster.size(); clusterIndex++)
 			{
-				featureVector = dataset[sentencesToIndexMap.get(candidates.getKey())];
-				boolean belongsToSelectedCluster = 
-						selectedCluster.contains(sentencesToClusterCenterMap.get(candidates.getKey()));
-				int selectedClusterSize = 0;
-				if(belongsToSelectedCluster)
+				double[][] selectedPassages = new double[dataset.length][dataset[0].length];
+				int noOfSelectedPassages = 0;
+				double[] featureVector;
+				double sim2Score;
+				//Set<Integer> selectedCluster = new HashSet<Integer>();
+				int sim2Index = 0;
+				double maxSim2Score = -1;
+
+				ArrayList<Map.Entry<String, Double>> sortedSim1List = sortedSim1ListPerCluster.get(clusterIndex);
+				HashMap<String, Double> sim2ScoresMap = new HashMap<String, Double>();
+				for(Map.Entry<String, Double> candidates : sortedSim1List)
 				{
-					selectedClusterSize = 
-							km.clusterCount[sentencesToClusterCenterMap.get(candidates.getKey())];
+					featureVector = dataset[sentencesToIndexMap.get(candidates.getKey())];
+					/*boolean belongsToSelectedCluster = 
+							selectedCluster.contains(sentencesToClusterCenterMap.get(candidates.getKey()));*/
+					//int selectedClusterSize = 0;
+					/*if(belongsToSelectedCluster)
+					{
+						selectedClusterSize = 
+								km.clusterCount[sentencesToClusterCenterMap.get(candidates.getKey())];
+					}*/
+					sim2Score = (1 - lambda) * relevanceRanker.Similarity_2(featureVector, selectedPassages, 
+												noOfSelectedPassages);/*, belongsToSelectedCluster, 
+												selectedClusterSize);*/
+					selectedPassages[noOfSelectedPassages++] = featureVector;
+					//selectedCluster.add(sentencesToClusterCenterMap.get(candidates.getKey()));
+					if(maxSim2Score < sim2Score)
+					{
+						maxSim2Score = sim2Score;
+					}
+					sim2ScoresMap.put(candidates.getKey(), sim2Score);
+					sim2Index++;
+					if(sim2Index % 200 == 0)
+					{
+						System.out.println(sim2Index+" sentence processed for sim 2");
+					}
 				}
-				sim2Score = (1 - lambda) * relevanceRanker.Similarity_2(featureVector, selectedPassages, 
-											noOfSelectedPassages, belongsToSelectedCluster, 
-											selectedClusterSize);
-				selectedPassages[noOfSelectedPassages++] = featureVector;
-				selectedCluster.add(sentencesToClusterCenterMap.get(candidates.getKey()));
-				sim2ScoresMap.put(candidates.getKey(), sim2Score);
+				sim2ScoresList.add(sim2ScoresMap);
 			}
-			
-			List<Map.Entry<String, Double>> sortedSim2List = new ArrayList<>(sim2ScoresMap.entrySet());
-			Collections.sort(sortedSim2List, sortComparator);
+			ArrayList<ArrayList<Map.Entry<String, Double>>> sortedSim2ListPerCluster = 
+					new ArrayList<ArrayList<Map.Entry<String, Double>>>();
+			for(int clusterIndex=0; clusterIndex<sim2ScoresList.size(); clusterIndex++)
+			{
+				ArrayList<Map.Entry<String, Double>> sortedSim2List = 
+						new ArrayList<Map.Entry<String, Double>>(sim2ScoresList.get(clusterIndex).entrySet());
+				Collections.sort(sortedSim2List, sortComparator);
+				sortedSim2ListPerCluster.add(sortedSim2List);
+			}
 			
 			System.out.println("Sim 2 sentences:");
-			for(Map.Entry<String, Double> printCandidate : sortedSim2List)
+			for(int clusterIndex=0; clusterIndex<sortedSim2ListPerCluster.size(); clusterIndex++)
 			{
-				System.out.println("Score: "+myFormat.format(printCandidate.getValue())
-						+"Sentence: "+printCandidate.getKey());
-				mmrmdScoresMap.put(printCandidate.getKey(), 
-						mmrmdScoresMap.get(printCandidate.getKey()) - printCandidate.getValue());
+				ArrayList<Map.Entry<String, Double>> sortedSim2List = sortedSim2ListPerCluster.get(clusterIndex);
+				HashMap<String, Double> mmrmdScoresMap = mmrmdScoresMapList.get(clusterIndex);
+				for(Map.Entry<String, Double> printCandidate : sortedSim2List)
+				{
+					//can normalize before subtracting
+					mmrmdScoresMap.put(printCandidate.getKey(), 
+							mmrmdScoresMap.get(printCandidate.getKey()) - printCandidate.getValue());
+				}
 			}
 			
-			List<Map.Entry<String, Double>> sortedMMRList = new ArrayList<>(mmrmdScoresMap.entrySet());
-			Collections.sort(sortedMMRList, sortComparator);
-			fos = new FileOutputStream(args[0]+".mmrmd");
-			fos.write(("MMR MD sentences: \n").getBytes("UTF8"));
-			for(Map.Entry<String, Double> printCandidate : sortedMMRList)
+			ArrayList<ArrayList<Map.Entry<String, Double>>> sortedMMRListPerCluster = 
+					new ArrayList<ArrayList<Map.Entry<String, Double>>>();
+			for(int clusterIndex=0; clusterIndex<mmrmdScoresMapList.size(); clusterIndex++)
 			{
-				fos.write(("In Cluster: "+sentencesToClusterCenterMap.get(printCandidate.getKey())
-						+" Relevance Score: "+myFormat.format(sim1Scores.get(printCandidate.getKey()))
-						+" Anti-Redundancy Score: "+myFormat.format(sim2ScoresMap.get(printCandidate.getKey()))
-						+" MMR Score: "+myFormat.format(printCandidate.getValue())
-						+" Sentence: "+printCandidate.getKey()+"\n").getBytes("UTF8"));			
+				ArrayList<Map.Entry<String, Double>> sortedMMRList = 
+						new ArrayList<Map.Entry<String, Double>>(mmrmdScoresMapList.get(clusterIndex).entrySet());
+				Collections.sort(sortedMMRList, sortComparator);
+				sortedMMRListPerCluster.add(sortedMMRList);
+			}
+			
+			for(int clusterIndex=0; clusterIndex<sortedMMRListPerCluster.size(); clusterIndex++)
+			{
+				fos = new FileOutputStream(args[0]+".cluster"+clusterIndex+".mmrmd");
+				System.out.println("MMR MD sentences: ");
+				ArrayList<Map.Entry<String, Double>> sortedMMRList = sortedMMRListPerCluster.get(clusterIndex);
+				for(Map.Entry<String, Double> printCandidate : sortedMMRList)
+				{
+					fos.write(("In Cluster: "+sentencesToClusterCenterMap.get(printCandidate.getKey())
+					+" Relevance Score: "+myFormat.format(sim1ScoresList.get(clusterIndex).get(printCandidate.getKey()))
+					+" Anti-Redundancy Score: "+myFormat.format(sim2ScoresList.get(clusterIndex).get(printCandidate.getKey()))
+					+" MMR Score: "+myFormat.format(printCandidate.getValue())
+					+" Sentence: "+printCandidate.getKey()+"\n").getBytes("UTF8"));			
+				}
 			}
 		}
 		catch(FileNotFoundException e)
@@ -232,7 +346,6 @@ public class Summarizer
 		@Override
 		public int compare(Map.Entry<String, Double> o1, Map.Entry<String, Double> o2) 
 		{
-			// TODO Auto-generated method stub
 			return o2.getValue().compareTo(o1.getValue());
 		}
 	}
