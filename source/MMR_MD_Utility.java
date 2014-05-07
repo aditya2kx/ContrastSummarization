@@ -54,11 +54,12 @@ public class MMR_MD_Utility
 		return score;
 	}
 	
-	public double Similarity_1(String passage, double distance)//, int clusterSize)
+	public double Similarity_1(String passage, double distance, double sentimentScore)//, int clusterSize)
 	{
 		double score = 0;		
 		score = weights[0] * similarityPassageAndCategory(passage);
 		score += weights[1] * distance;
+		score += weights[2] * sentimentScore;
 		//score += weights[2] * clusterSize;
 		return score;
 	}
