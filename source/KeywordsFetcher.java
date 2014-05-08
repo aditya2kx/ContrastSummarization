@@ -1,10 +1,10 @@
 package source;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -18,12 +18,12 @@ public class KeywordsFetcher
 	private Map<String, Set<String>> keywordsSetMap;
 	private static KeywordsFetcher instance;
 
-	public static KeywordsFetcher getInstance(String filename)
+	public static KeywordsFetcher getInstance(InputStream inputStream)
 	{
 		if(instance == null)
 		{
 			try {
-				instance = new KeywordsFetcher(filename);
+				instance = new KeywordsFetcher(inputStream);
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
@@ -31,16 +31,16 @@ public class KeywordsFetcher
 		return instance;
 	}
 
-	private KeywordsFetcher(String filename) throws FileNotFoundException, IOException
+	private KeywordsFetcher(InputStream inputStream) throws FileNotFoundException, IOException
 	{
-		loadKeywordsFile(filename);
+		loadKeywordsFile(inputStream);
 	}
 
-	public Map<String, Set<String>> loadKeywordsFile(String keywordsFile) throws FileNotFoundException, IOException{
+	public Map<String, Set<String>> loadKeywordsFile(InputStream inputStream) throws FileNotFoundException, IOException{
 		keywordsSetMap = new HashMap<>();
 		String readLine;
 		StringBuffer buffer = new StringBuffer();
-		try(BufferedReader reader = new BufferedReader(new FileReader(new File(keywordsFile)))){
+		try(BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))){
 			while((readLine = reader.readLine()) != null){
 				buffer.append(readLine);
 			}
