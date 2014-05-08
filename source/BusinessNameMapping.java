@@ -12,7 +12,7 @@ import java.util.Properties;
 
 public class BusinessNameMapping {
 
-	private static final String REVIEW_FILE_START_PORTION="yelp_phoenix_academic_dataset.rest_business_";
+	private static final String REVIEW_FILE_START_PORTION="Rest_Business_";
 	
 	private static String reviewFilePath;
 	
