@@ -28,11 +28,18 @@ public class SummarizerServer {
 	}
 
 	public static void main(String[] args) throws IOException {
-		HttpServer httpServer = startServer();
+		final HttpServer httpServer = startServer();
 		System.out.println(String.format("Jersey app started.. "
 				+ "\nHit enter to stop it...",
 				BASE_URI, BASE_URI));
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+			@Override
+			public void run() {
+				System.out.println("Shutting down the server.");
+				httpServer.shutdown();
+			}
+		});
 		System.in.read();
-		httpServer.shutdown();
+		
 	}
 }
