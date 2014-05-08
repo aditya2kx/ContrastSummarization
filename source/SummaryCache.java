@@ -16,7 +16,7 @@ public class SummaryCache
 	
 	public static SummaryCache getInstance() throws FileNotFoundException, IOException, ClassNotFoundException
 	{
-		if(summaryCache != null)
+		if(summaryCache == null)
 		{
 			summaryCache = new SummaryCache();
 		}
