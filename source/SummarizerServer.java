@@ -20,14 +20,18 @@ public class SummarizerServer {
 
 	public static final URI BASE_URI = getBaseURI();
 
-	protected static HttpServer startServer() throws IOException {
+	protected static HttpServer startServer() throws IOException, ClassNotFoundException {
 		System.out.println("Starting grizzly...");
 		ResourceConfig rc = new PackagesResourceConfig("edu.usc.review.summarization.resources");
 		rc.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
+		
+		//Load the cache
+		SummaryCache.getInstance();
+		
 		return GrizzlyServerFactory.createHttpServer(BASE_URI, rc);
 	}
 
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws IOException, ClassNotFoundException {
 		final HttpServer httpServer = startServer();
 		System.out.println(String.format("Jersey app started.. "
 				+ "\nHit enter to stop it...",
@@ -36,6 +40,14 @@ public class SummarizerServer {
 			@Override
 			public void run() {
 				System.out.println("Shutting down the server.");
+				
+				//Save the cache
+				try {
+					SummaryCache.getInstance().saveCacheToFile();
+				} catch (ClassNotFoundException | IOException e) {
+					throw new RuntimeException(e);
+				}
+				
 				httpServer.shutdown();
 			}
 		});
