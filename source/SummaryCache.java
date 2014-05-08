@@ -2,7 +2,6 @@ package source;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -15,9 +14,9 @@ import java.sql.Statement;
 
 public class SummaryCache 
 {
-	private Connection con;	
+	private static Connection con;	
 	private static SummaryCache summaryCache;
-	private Statement st;
+	private static Statement st;
 	private ResultSet rs;
 
 	public static SummaryCache getInstance() throws ClassNotFoundException, InstantiationException, IllegalAccessException, SQLException 
@@ -31,42 +30,57 @@ public class SummaryCache
 
 	private SummaryCache()throws ClassNotFoundException, InstantiationException, IllegalAccessException, SQLException
 	{
+		createConnection();
+	}
+
+	private static void createConnection() throws InstantiationException,
+	IllegalAccessException, ClassNotFoundException, SQLException {
 		Class.forName("com.mysql.jdbc.Driver").newInstance();
 		con = DriverManager.getConnection("jdbc:mysql://66.147.244.79:3306/adityapa_nlp_summary","adityapa_nlpyelp","nlpyelp");
 		st=con.createStatement();
 	}
 
 
-	public CategorySummaryBean fetchSummaryBean(String businessName) throws SQLException, IOException, ClassNotFoundException
+	public CategorySummaryBean fetchSummaryBean(String businessName) throws SQLException, IOException, ClassNotFoundException, InstantiationException, IllegalAccessException
 	{
 		CategorySummaryBean catSumBean = null;
-		rs=st.executeQuery("select * from SummaryCache where Business_Name='"+businessName+"'");
-		if(rs.next())
-		{
-			ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(rs.getBytes(2));
-			ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayInputStream);
-			catSumBean = (CategorySummaryBean)objectInputStream.readObject();
-			objectInputStream.close();
-			rs.close();
+		try{
+			rs=st.executeQuery("select * from SummaryCache where Business_Name='"+businessName+"'");
+			if(rs.next())
+			{
+				ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(rs.getBytes(2));
+				ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayInputStream);
+				catSumBean = (CategorySummaryBean)objectInputStream.readObject();
+				objectInputStream.close();
+				rs.close();
+			}
+		}catch(Exception e){
+			System.out.println("Exception thrown in fetchSummaryBean: " + e.getMessage());
+			createConnection();
 		}
 
 		return catSumBean;
 	}
 
-	public void saveSummaryBean(String businessName, CategorySummaryBean catSumBean) throws IOException, SQLException
+	public void saveSummaryBean(String businessName, CategorySummaryBean catSumBean) throws IOException, SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException
 	{
-		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
-        objectOutputStream.writeObject(catSumBean);
-		
-		PreparedStatement pst = con.prepareStatement("insert into SummaryCache values(?, ?)");
-		pst.setString(1, businessName);
-		pst.setBytes(2, byteArrayOutputStream.toByteArray());
-		pst.executeUpdate();
-		objectOutputStream.close();
-		pst.close();
+		try{
+			ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+			ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
+			objectOutputStream.writeObject(catSumBean);
+
+			PreparedStatement pst = con.prepareStatement("insert into SummaryCache values(?, ?)");
+			pst.setString(1, businessName);
+			pst.setBytes(2, byteArrayOutputStream.toByteArray());
+			pst.executeUpdate();
+			objectOutputStream.close();
+			pst.close();
+		}catch(Exception e){
+			System.out.println("Exception thrown in saveSummaryBean: " + e.getMessage());
+			createConnection();
+		}
 	}
-	
+
 	public void releaseResources() throws SQLException
 	{
 		st.close();
