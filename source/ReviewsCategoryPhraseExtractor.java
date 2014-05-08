@@ -32,16 +32,11 @@ public class ReviewsCategoryPhraseExtractor {
 
 	private static Set<String> skipWordsSet;
 
-	public static void main(String[] args) throws FileNotFoundException, IOException {
-		if(args.length < 3){
-			System.err.println("Usage: KeywordSimilarityWithReviews <keywords-file> <sentences-input-file> <skip-words-list>");
-			System.exit(0);
-		}
-
+	public static void generatePhrase(String args) throws FileNotFoundException, IOException {
 		long startTime = new Date().getTime();
 
-		String sentencesFile = args[1];//"TestFile";
-		String outputFile = args[1]+".out.1";
+		String sentencesFile = args;//"TestFile";
+		String outputFile = args+".phrase.out";
 
 		String readLine;
 		Set<String> keywordsSet;
