@@ -36,7 +36,7 @@ public class ReviewsCategoryPhraseExtractor {
 			System.err.println("Usage: KeywordSimilarityWithReviews <keywords-file> <sentences-input-file> <skip-words-list>");
 			System.exit(0);
 		}
-		
+
 		long startTime = new Date().getTime();
 
 		String keywordsFile = args[0];//"aggregate_keywords_file.txt";
@@ -58,10 +58,10 @@ public class ReviewsCategoryPhraseExtractor {
 
 		//Create the jaro winkler instance
 		levenshtein = new Levenshtein();
-		
+
 		//Load the pipeline
 		StanfordCoreNLP pipeline = StanfordLoadAnnotaters.getInstance().getPipeLine();
-		
+
 		//sentences file
 		JSONObject jsonObject;
 		String reviewText, phraseReviewText;
@@ -72,7 +72,7 @@ public class ReviewsCategoryPhraseExtractor {
 		List<CoreLabel> tokensList; boolean containsMatch;
 		Map<Integer, List<String>> ngramMap;
 		PhraseExtractor phraseExtractor = PhraseExtractor.getInstance();
-		
+
 		JSONArray inputObject = new JSONArray();
 		JSONArray outputObject = new JSONArray();
 		JSONObject reviewPhraseObject, categoryObject;
@@ -97,20 +97,22 @@ public class ReviewsCategoryPhraseExtractor {
 						containsMatch = getReviewSentence(tokensList, ngramMap, keywordsSet);
 						if(containsMatch){
 							phraseReviewText = phraseSentence.toString();
-							sentimentMeta = EnsembledSentimentAnalyzer.getSentimentClass(rating, phraseReviewText);
-							categoryObject.append(category, getJsonStringForPhrase(rating, phraseReviewText, sentimentMeta));
+							if(phraseReviewText.length() < 4){
+								sentimentMeta = EnsembledSentimentAnalyzer.getSentimentClass(rating, phraseReviewText);
+								categoryObject.append(category, getJsonStringForPhrase(rating, phraseReviewText, sentimentMeta));
+							}
 						}
 					}
 				}
-				
+
 				//Append to the existing input object
 				inputObject.put(getJsonStringForReview(reviewId, reviewText));
-				
+
 				//Each review phrase object
 				reviewPhraseObject = new JSONObject();
 				reviewPhraseObject.put("review_id", reviewId);
 				reviewPhraseObject.put("categories", categoryObject);
-				
+
 				//Append to the existing output object
 				outputObject.put(reviewPhraseObject);
 			}
@@ -125,7 +127,7 @@ public class ReviewsCategoryPhraseExtractor {
 			writer.append(outputObject.toString(1));
 			writer.append("\n}");
 		}
-		
+
 		long endTime = new Date().getTime();
 		System.out.println("Time taken: " + ((double) endTime - startTime)/1000 + " secs..");
 	}
@@ -139,7 +141,7 @@ public class ReviewsCategoryPhraseExtractor {
 
 		return jsonObj.toString();
 	}
-	
+
 	private static String getJsonStringForReview(int reviewId, String reviewText){
 		JSONObject jsonObj = new JSONObject();
 		jsonObj.put("review_id", reviewId);
