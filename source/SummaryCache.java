@@ -28,11 +28,6 @@ public class SummaryCache
 		return summaryCache;
 	}
 
-	private SummaryCache()throws ClassNotFoundException, InstantiationException, IllegalAccessException, SQLException
-	{
-		createConnection();
-	}
-
 	private static void createConnection() throws InstantiationException,
 	IllegalAccessException, ClassNotFoundException, SQLException {
 		Class.forName("com.mysql.jdbc.Driver").newInstance();
@@ -45,6 +40,7 @@ public class SummaryCache
 	{
 		CategorySummaryBean catSumBean = null;
 		try{
+			createConnection();
 			rs=st.executeQuery("select * from SummaryCache where Business_Name='"+businessName+"'");
 			if(rs.next())
 			{
@@ -52,11 +48,11 @@ public class SummaryCache
 				ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayInputStream);
 				catSumBean = (CategorySummaryBean)objectInputStream.readObject();
 				objectInputStream.close();
-				rs.close();
 			}
+			rs.close();
+			releaseResources();
 		}catch(Exception e){
 			System.out.println("Exception thrown in fetchSummaryBean: " + e.getMessage());
-			createConnection();
 		}
 
 		return catSumBean;
@@ -65,6 +61,7 @@ public class SummaryCache
 	public void saveSummaryBean(String businessName, CategorySummaryBean catSumBean) throws IOException, SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException
 	{
 		try{
+			createConnection();
 			ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 			ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
 			objectOutputStream.writeObject(catSumBean);
@@ -75,9 +72,9 @@ public class SummaryCache
 			pst.executeUpdate();
 			objectOutputStream.close();
 			pst.close();
+			releaseResources();
 		}catch(Exception e){
 			System.out.println("Exception thrown in saveSummaryBean: " + e.getMessage());
-			createConnection();
 		}
 	}
 
