@@ -56,7 +56,12 @@ public class BusinessNameMapping {
 	}
 	
 	public static String getBusinessReviewFilePath(String businessName){
-		return reviewFilePath + File.separator + REVIEW_FILE_START_PORTION + businessNameToIdMapping.get(businessName);
+		String businessPath = businessNameToIdMapping.get(businessName);
+		if(businessPath == null){
+			return null;
+		}
+		
+		return reviewFilePath + File.separator + REVIEW_FILE_START_PORTION + businessPath;
 	}
 	
 	public static void main(String[] args) {
