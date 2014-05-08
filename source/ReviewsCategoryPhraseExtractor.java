@@ -91,7 +91,7 @@ public class ReviewsCategoryPhraseExtractor {
 						containsMatch = getReviewSentence(tokensList, ngramMap, keywordsSet);
 						if(containsMatch){
 							phraseReviewText = phraseSentence.toString();
-							if(phraseReviewText.length() < 4){
+							if(phraseReviewText.length() >= 4){
 								sentimentMeta = EnsembledSentimentAnalyzer.getSentimentClass(rating, phraseReviewText);
 								categoryObject.append(category, getJsonStringForPhrase(rating, phraseReviewText, sentimentMeta));
 							}
