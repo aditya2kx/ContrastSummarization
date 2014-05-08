@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -39,18 +40,16 @@ public class ReviewsCategoryPhraseExtractor {
 
 		long startTime = new Date().getTime();
 
-		String keywordsFile = args[0];//"aggregate_keywords_file.txt";
 		String sentencesFile = args[1];//"TestFile";
-		String skipWordsFile = args[2];
 		String outputFile = args[1]+".out.1";
 
 		String readLine;
 		Set<String> keywordsSet;
-		Map<String, Set<String>> categoryKeywordsMap = KeywordsFetcher.getInstance(keywordsFile).getCategoryKeywordsMap();
+		Map<String, Set<String>> categoryKeywordsMap = KeywordsFetcher.getInstance(ClassLoader.getSystemResourceAsStream("aggregated_keywords_file.json")).getCategoryKeywordsMap();
 
 		//Read the skip words
 		skipWordsSet = new HashSet<>();
-		try(BufferedReader reader = new BufferedReader(new FileReader(new File(skipWordsFile)))){
+		try(BufferedReader reader = new BufferedReader(new InputStreamReader(ClassLoader.getSystemResourceAsStream("skip-words.txt")))){
 			while((readLine = reader.readLine()) != null){
 				skipWordsSet.add(readLine);
 			}
