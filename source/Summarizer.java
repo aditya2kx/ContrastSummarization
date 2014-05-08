@@ -98,7 +98,7 @@ public class Summarizer
 				JSONFileContent += currentLine;
 				//lines.add(currentLine);
 			}
-			
+			fis.close();
 			try
 			{
 				JSONObject reviewJSON = new JSONObject(JSONFileContent);
