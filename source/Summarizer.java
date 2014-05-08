@@ -85,7 +85,7 @@ public class Summarizer
 		{
 			linesPerSentiment.add(new ArrayList<String>());
 			SummaryBean sumBean = new SummaryBean(); 
-			catSumBean.addCategorySummary(SentimentClass.values()[sentimentCatIndex], "food", sumBean);
+			catSumBean.addCategorySummary(SentimentClass.values()[sentimentCatIndex], "Food", sumBean);
 			summaryBeanList.add(sumBean);
 		}
 		
