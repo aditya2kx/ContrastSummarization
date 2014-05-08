@@ -1,9 +1,14 @@
 package source;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-public class CategorySummaryBean {
+public class CategorySummaryBean implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private Map<SentimentClass, Map<String, SummaryBean>> categorySummaryMap;
 
 	public CategorySummaryBean(){

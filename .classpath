@@ -33,5 +33,6 @@
 	<classpathentry kind="lib" path="Jars/jersey-json-1.18.1.jar"/>
 	<classpathentry kind="lib" path="Jars/jersey-server-1.18.1.jar"/>
 	<classpathentry kind="lib" path="Jars/jersey-servlet-1.18.1.jar"/>
+	<classpathentry kind="lib" path="Jars/mysql-connector-java.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

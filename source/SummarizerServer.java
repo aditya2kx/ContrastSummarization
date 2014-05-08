@@ -2,6 +2,7 @@ package source;
 
 import java.io.IOException;
 import java.net.URI;
+import java.sql.SQLException;
 
 import javax.ws.rs.core.UriBuilder;
 
@@ -25,9 +26,6 @@ public class SummarizerServer {
 		ResourceConfig rc = new PackagesResourceConfig("edu.usc.review.summarization.resources");
 		rc.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
 		
-		//Load the cache
-		SummaryCache.getInstance();
-		
 		return GrizzlyServerFactory.createHttpServer(BASE_URI, rc);
 	}
 
@@ -43,8 +41,8 @@ public class SummarizerServer {
 				
 				//Save the cache
 				try {
-					SummaryCache.getInstance().saveCacheToFile();
-				} catch (ClassNotFoundException | IOException e) {
+					SummaryCache.getInstance().releaseResources();
+				} catch (ClassNotFoundException | InstantiationException | IllegalAccessException | SQLException e) {
 					throw new RuntimeException(e);
 				}
 				

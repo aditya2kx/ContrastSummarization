@@ -2,6 +2,7 @@ package edu.usc.review.summarization.resources;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.sql.SQLException;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -23,7 +24,7 @@ public class ReviewSummarizerResource {
 	@Path("/generate")
 	@GET
 	@Produces("plain/txt")
-	public Response createSummary(@QueryParam("name") String businessName) throws FileNotFoundException, IOException, ClassNotFoundException{
+	public Response createSummary(@QueryParam("name") String businessName) throws FileNotFoundException, IOException, ClassNotFoundException, InstantiationException, IllegalAccessException, SQLException{
 		String businessReviewPath = BusinessNameMapping.getBusinessReviewFilePath(businessName);
 		if(businessReviewPath == null){
 			return Response.status(Status.NOT_FOUND).entity("Reviews cannot be found for the business.").build();

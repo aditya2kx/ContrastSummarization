@@ -1,20 +1,26 @@
 package source;
 
-import java.io.File;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.HashMap;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 public class SummaryCache 
 {
-	private HashMap<String, CategorySummaryBean> cacheSumBean;	
+	private Connection con;	
 	private static SummaryCache summaryCache;
-	
-	public static SummaryCache getInstance() throws FileNotFoundException, IOException, ClassNotFoundException
+	private Statement st;
+	private ResultSet rs;
+
+	public static SummaryCache getInstance() throws ClassNotFoundException, InstantiationException, IllegalAccessException, SQLException 
 	{
 		if(summaryCache == null)
 		{
@@ -22,64 +28,48 @@ public class SummaryCache
 		}
 		return summaryCache;
 	}
-	
-	private SummaryCache()throws FileNotFoundException, IOException, ClassNotFoundException
+
+	private SummaryCache()throws ClassNotFoundException, InstantiationException, IllegalAccessException, SQLException
 	{
-		FileInputStream fis = null;
-		ObjectInputStream ois = null;
-		File f = null;
+		Class.forName("com.mysql.jdbc.Driver").newInstance();
+		con = DriverManager.getConnection("jdbc:mysql://66.147.244.79:3306/adityapa_nlp_summary","adityapa_nlpyelp","nlpyelp");
+		st=con.createStatement();
+	}
+
+
+	public CategorySummaryBean fetchSummaryBean(String businessName) throws SQLException, IOException, ClassNotFoundException
+	{
+		CategorySummaryBean catSumBean = null;
+		rs=st.executeQuery("select * from SummaryCache where Business_Name='"+businessName+"'");
+		if(rs.next())
+		{
+			ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(rs.getBytes(2));
+			ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayInputStream);
+			catSumBean = (CategorySummaryBean)objectInputStream.readObject();
+			objectInputStream.close();
+			rs.close();
+		}
+
+		return catSumBean;
+	}
+
+	public void saveSummaryBean(String businessName, CategorySummaryBean catSumBean) throws IOException, SQLException
+	{
+		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
+        objectOutputStream.writeObject(catSumBean);
 		
-		try
-		{
-			f = new File("SummaryCache.dat");
-			if(f.exists())
-			{
-				fis = new FileInputStream(f);
-				ois = new ObjectInputStream(fis);
-				cacheSumBean = (HashMap<String, CategorySummaryBean>)ois.readObject();
-			}
-			else
-			{
-				cacheSumBean = new HashMap<String, CategorySummaryBean>();
-			}
-		}
-		finally
-		{
-			if(fis!=null)
-			{
-				fis.close();
-			}
-		}
+		PreparedStatement pst = con.prepareStatement("insert into SummaryCache values(?, ?)");
+		pst.setString(1, businessName);
+		pst.setBytes(2, byteArrayOutputStream.toByteArray());
+		pst.executeUpdate();
+		objectOutputStream.close();
+		pst.close();
 	}
 	
-	public void saveCacheToFile() throws IOException
+	public void releaseResources() throws SQLException
 	{
-		FileOutputStream fos = null;
-		ObjectOutputStream oos = null;
-		
-		try
-		{
-			fos = new FileOutputStream("SummaryCache.dat");
-			oos = new ObjectOutputStream(fos);
-			oos.writeObject(cacheSumBean);
-		}
-		finally
-		{
-			if(fos!=null)
-			{
-				fos.close();
-			}
-		}
-		
-	}
-	
-	public CategorySummaryBean fetchSummaryBean(String businessName)
-	{
-		return cacheSumBean.get(businessName);
-	}
-	
-	public void saveSummaryBean(String businessName, CategorySummaryBean catSumBean)
-	{
-		cacheSumBean.put(businessName, catSumBean);
+		st.close();
+		con.close();
 	}
 }

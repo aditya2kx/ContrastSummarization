@@ -1,9 +1,14 @@
 package source;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SummaryBean {
+public class SummaryBean implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private List<String> SentenceList;
 	
 	public SummaryBean(){
