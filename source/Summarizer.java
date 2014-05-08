@@ -63,7 +63,7 @@ public class Summarizer
 		}
 	}
 	
-	public static CategorySummaryBean generateSummary(String[] args) 
+	public static CategorySummaryBean generateSummary(String args) 
 	{
 		FileInputStream fis = null;
 		BufferedReader br = null;
@@ -91,7 +91,7 @@ public class Summarizer
 		
 		try
 		{
-			fis = new FileInputStream(args[0]);
+			fis = new FileInputStream(args);
 			br = new BufferedReader(new InputStreamReader(fis));
 			while((currentLine = br.readLine()) !=null)
 			{
@@ -205,7 +205,7 @@ public class Summarizer
 					int[] supportingNodes = km.clusters[i];
 					int clustersize = km.clusterCount[i];
 					int centroidSentenceIndex = km.getCentroidSentence(i);
-					fos = new FileOutputStream(args[0]+sentimentCategories.get(sentimentCatIndex)+".cluster"+i);
+					fos = new FileOutputStream(args+sentimentCategories.get(sentimentCatIndex)+".cluster"+i);
 					
 					fos.write(("Cluster Index"+i+" Sentence: "+ sentencesList.get(centroidSentenceIndex) +"\n")
 							.getBytes("UTF8"));
@@ -365,7 +365,7 @@ public class Summarizer
 				
 				for(int clusterIndex=0; clusterIndex<sortedMMRListPerCluster.size(); clusterIndex++)
 				{
-					fos = new FileOutputStream(args[0]+sentimentCategories.get(sentimentCatIndex)+".cluster"+clusterIndex+".mmrmd");
+					fos = new FileOutputStream(args+sentimentCategories.get(sentimentCatIndex)+".cluster"+clusterIndex+".mmrmd");
 					System.out.println("MMR MD sentences: ");
 					ArrayList<Map.Entry<String, Double>> sortedMMRList = sortedMMRListPerCluster.get(clusterIndex);
 					for(Map.Entry<String, Double> printCandidate : sortedMMRList)
