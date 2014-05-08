@@ -73,12 +73,17 @@ public class Summarizer
 		LTCGenerator ltc;
 		ArrayList<String> sentimentCategories = new ArrayList<String>();
 		KMean km;
+		CategorySummaryBean catSumBean = new CategorySummaryBean();
+		List<SummaryBean> summaryBeanList = new ArrayList<SummaryBean>();
 		
 		sentimentCategories.add("positive");
 		sentimentCategories.add("negative");
 		for(int sentimentCatIndex=0; sentimentCatIndex<sentimentCategories.size(); sentimentCatIndex++)
 		{
 			linesPerSentiment.add(new ArrayList<String>());
+			SummaryBean sumBean = new SummaryBean(); 
+			catSumBean.addCategorySummary("food", SentimentClass.values()[sentimentCatIndex], sumBean);
+			summaryBeanList.add(sumBean);
 		}
 		
 		try
@@ -176,6 +181,21 @@ public class Summarizer
 				List<String> sentencesList = ltc.getSentencesList();
 				HashMap<Integer, Integer> sentenceIndexToClusterCenterSentenceIndexMap = 
 									new HashMap<Integer, Integer>();
+				ArrayList<Map.Entry<Integer, Integer>> sortedClusterToClusterSizeList;
+				HashMap<Integer, Integer> clusterToClusterSizMap = 
+						new HashMap<Integer, Integer>();
+				
+				for(int i=0;i<km.K;i++)
+				{
+					clusterToClusterSizMap.put(i, km.clusterCount[i]);
+				}
+				
+				sortedClusterToClusterSizeList = 
+						new ArrayList<Map.Entry<Integer, Integer>>(clusterToClusterSizMap.entrySet());
+				
+				Collections.sort(sortedClusterToClusterSizeList, new SortComparatorInteger());
+				
+				
 				FileOutputStream fos = null;
 				for(int i=0;i<km.K;i++)
 				{
@@ -354,6 +374,26 @@ public class Summarizer
 						+" Sentence: "+printCandidate.getKey()+"\n").getBytes("UTF8"));			
 					}
 				}
+				
+				for(Map.Entry<Integer, Integer> clusterIndex : sortedClusterToClusterSizeList)
+				{
+					ArrayList<Map.Entry<String, Double>> sortedMMRList =
+							sortedMMRListPerCluster.get(clusterIndex.getKey());
+					int noOfSentencesToPick = 0;
+					for(Map.Entry<String, Double> printCandidate : sortedMMRList)
+					{
+						if(noOfSentencesToPick < noOfSentencesFromEachCluster[clusterIndex.getKey()])
+						{
+							summaryBeanList.get(sentimentCatIndex).addSentence(printCandidate.getKey());
+						}
+						else
+						{
+							break;
+						}
+						noOfSentencesToPick++;
+					}
+				}
+				System.out.println();
 			}
 		}
 		catch(FileNotFoundException e)
@@ -373,5 +413,12 @@ public class Summarizer
 			return o2.getValue().compareTo(o1.getValue());
 		}
 	}
-
+	private static class SortComparatorInteger implements Comparator<Map.Entry<Integer, Integer>>
+	{
+		@Override
+		public int compare(Map.Entry<Integer, Integer> o1, Map.Entry<Integer, Integer> o2) 
+		{
+			return o2.getValue().compareTo(o1.getValue());
+		}
+	}
 }

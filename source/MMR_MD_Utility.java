@@ -69,31 +69,33 @@ public class MMR_MD_Utility
 													 	int noOfSelectedPassages)
 	{
 		double score = 0;
-		for ( int sentenceIndex = 0; sentenceIndex < noOfSelectedPassages; sentenceIndex++)
+		if(noOfSelectedPassages > 0)
 		{
-			double distance = 0;
-			double selectedSentenceMod = 0;
-			double vectorMod = 0;
-			for(int featureIndex = 0; featureIndex < datasetForSelectedPassages[sentenceIndex].length;
-								featureIndex++)
+			for ( int sentenceIndex = 0; sentenceIndex < noOfSelectedPassages; sentenceIndex++)
 			{
-				distance += 
-						(datasetForAPassage[featureIndex] * 
-								datasetForSelectedPassages[sentenceIndex][featureIndex]);
-				
-				selectedSentenceMod += datasetForAPassage[featureIndex] *
-						datasetForAPassage[featureIndex];
-				
-				vectorMod += datasetForSelectedPassages[sentenceIndex][featureIndex] *
-						datasetForSelectedPassages[sentenceIndex][featureIndex];
-			}
-			selectedSentenceMod = Math.sqrt(selectedSentenceMod);
-			vectorMod = Math.sqrt(vectorMod);
-			distance /= Math.log10(selectedSentenceMod * vectorMod);
-			score += distance;
-		}    
-		score = Math.log10(score)/Math.log10((double)datasetForSelectedPassages.length);
-		
+				double distance = 0;
+				double selectedSentenceMod = 0;
+				double vectorMod = 0;
+				for(int featureIndex = 0; featureIndex < datasetForSelectedPassages[sentenceIndex].length;
+									featureIndex++)
+				{
+					distance += 
+							(datasetForAPassage[featureIndex] * 
+									datasetForSelectedPassages[sentenceIndex][featureIndex]);
+					
+					selectedSentenceMod += datasetForAPassage[featureIndex] *
+							datasetForAPassage[featureIndex];
+					
+					vectorMod += datasetForSelectedPassages[sentenceIndex][featureIndex] *
+							datasetForSelectedPassages[sentenceIndex][featureIndex];
+				}
+				selectedSentenceMod = Math.sqrt(selectedSentenceMod);
+				vectorMod = Math.sqrt(vectorMod);
+				distance /= Math.log10(selectedSentenceMod * vectorMod);
+				score += distance;
+			}    
+			score = Math.log10(score)/Math.log10((double)datasetForSelectedPassages.length);
+		}
 		return score;
 	}
 	
