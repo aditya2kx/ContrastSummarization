@@ -407,7 +407,7 @@ public class Summarizer
 		{
 			e.printStackTrace();
 		}
-		return CategorySummaryBean
+		return catSumBean;
 	}
 	private static class SortComparator implements Comparator<Map.Entry<String, Double>>
 	{
