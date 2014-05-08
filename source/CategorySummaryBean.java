@@ -4,20 +4,20 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class CategorySummaryBean {
-	private Map<String, Map<SentimentClass, SummaryBean>> categorySummaryMap;
+	private Map<SentimentClass, Map<String, SummaryBean>> categorySummaryMap;
 
 	public CategorySummaryBean(){
-		categorySummaryMap = new HashMap<String, Map<SentimentClass, SummaryBean>>();
+		categorySummaryMap = new HashMap<SentimentClass, Map<String, SummaryBean>>();
 	}
 
-	public void addCategorySummary(String category, SentimentClass sentimentClass, SummaryBean summaryBean){
-		Map<SentimentClass, SummaryBean> summaryMap = categorySummaryMap.get(category);
+	public void addCategorySummary(SentimentClass sentimentClass, String category, SummaryBean summaryBean){
+		Map<String, SummaryBean> summaryMap = categorySummaryMap.get(sentimentClass);
 		if(summaryMap == null){
 			summaryMap = new HashMap<>();
 		}
 
-		summaryMap.put(sentimentClass, summaryBean);
-		categorySummaryMap.put(category, summaryMap);
+		summaryMap.put(category, summaryBean);
+		categorySummaryMap.put(sentimentClass, summaryMap);
 	}
 
 	public SummaryBean getSentimentSummary(String category, SentimentClass sentimentClass){
@@ -28,11 +28,11 @@ public class CategorySummaryBean {
 		return null;
 	}
 
-	public Map<SentimentClass, SummaryBean> getSentimentSummaryMap(String category){
+	public Map<String, SummaryBean> getSentimentSummaryMap(String category){
 		return categorySummaryMap.get(category);
 	}
 
-	public Map<String, Map<SentimentClass, SummaryBean>> getCategorySummaryMap(){
+	public Map<SentimentClass, Map<String, SummaryBean>> getCategorySummaryMap(){
 		return categorySummaryMap;
 	}
 }
