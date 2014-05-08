@@ -13,6 +13,7 @@ import com.sun.jersey.api.core.ResourceConfig;
 import com.sun.jersey.api.json.JSONConfiguration;
 
 public class SummarizerServer {
+	
 	private static URI getBaseURI() {
 		return UriBuilder.fromUri("http://localhost/").port(9998).build();
 	}
