@@ -25,6 +25,10 @@ public class ReviewSummarizerResource {
 	@Produces("plain/txt")
 	public Response createSummary(@QueryParam("name") String businessName) throws FileNotFoundException, IOException, ClassNotFoundException{
 		String businessReviewPath = BusinessNameMapping.getBusinessReviewFilePath(businessName);
+		if(businessReviewPath == null){
+			return Response.status(Status.NOT_FOUND).entity("Reviews cannot be found for the business.").build();
+		}
+		
 		System.out.println(businessName);
 		System.out.println(businessReviewPath);
 		SummaryCache cacheInstance = SummaryCache.getInstance();
