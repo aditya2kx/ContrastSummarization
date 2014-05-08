@@ -32,10 +32,10 @@ public class PhraseExtractor {
 	}
 
 	public List<String> getExtractedPhrases(String reviewPassage) throws IOException{
+		reviewPassage = Utils.splitSentenceHavingPattern(reviewPassage);
 		Annotation reviewTextDocument = new Annotation(reviewPassage);
 		pipeline.annotate(reviewTextDocument);
 		List<CoreMap> reviewSentencesMap = reviewTextDocument.get(SentencesAnnotation.class);
-
 		Annotation phraseTextDocument;
 		List<CoreMap> phraseSentencesList;
 		Tree phraseTreeModel;

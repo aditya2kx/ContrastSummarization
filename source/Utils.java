@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import uk.ac.shef.wit.simmetrics.similaritymetrics.Levenshtein;
 
@@ -70,6 +72,24 @@ public class Utils {
 		}
 		
 		return false;
+	}
+	
+	public static String splitSentenceHavingPattern(String text)
+	{
+		boolean patternExists = true;
+		
+		while(patternExists)
+		{
+			Pattern p = Pattern.compile("(.)*([a-z]{2})(\\.)([a-zA-Z]{2})(.)*");
+			Matcher m = p.matcher(text);
+			patternExists = m.matches();
+			if(patternExists)
+			{
+				int endIndex = m.start(3);
+				text = text.substring(0, endIndex+1) + " " + text.substring(endIndex+1);
+			}
+		}
+		return text;
 	}
 	
 	public static String getSimilarKeyword(Set<String> keywordSet, String term){

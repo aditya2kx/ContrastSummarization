@@ -31,7 +31,7 @@ public class SummaryCache
 		
 		try
 		{
-			f = new File("summaryCache.dat");
+			f = new File("SummaryCache.dat");
 			if(f.exists())
 			{
 				fis = new FileInputStream(f);
@@ -59,7 +59,7 @@ public class SummaryCache
 		
 		try
 		{
-			fos = new FileOutputStream("summaryCache.dat");
+			fos = new FileOutputStream("SummaryCache.dat");
 			oos = new ObjectOutputStream(fos);
 			oos.writeObject(cacheSumBean);
 		}
