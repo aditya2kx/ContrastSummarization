@@ -4,6 +4,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -62,7 +63,7 @@ public class Summarizer
 		}
 	}
 	
-	public static void main(String[] args) 
+	public static CategorySummaryBean generateSummary(String[] args) 
 	{
 		FileInputStream fis = null;
 		BufferedReader br = null;
@@ -75,6 +76,8 @@ public class Summarizer
 		KMean km;
 		CategorySummaryBean catSumBean = new CategorySummaryBean();
 		List<SummaryBean> summaryBeanList = new ArrayList<SummaryBean>();
+		InputStream categoryFileStream = ClassLoader.getSystemResourceAsStream("aggregated_keywords_file.json");
+		
 		
 		sentimentCategories.add("positive");
 		sentimentCategories.add("negative");
@@ -82,7 +85,7 @@ public class Summarizer
 		{
 			linesPerSentiment.add(new ArrayList<String>());
 			SummaryBean sumBean = new SummaryBean(); 
-			catSumBean.addCategorySummary("food", SentimentClass.values()[sentimentCatIndex], sumBean);
+			catSumBean.addCategorySummary(SentimentClass.values()[sentimentCatIndex], "food", sumBean);
 			summaryBeanList.add(sumBean);
 		}
 		
@@ -135,7 +138,7 @@ public class Summarizer
 			}
 
 
-			Set<String> keywordsSet = KeywordsFetcher.getInstance(args[1]).getCategoryKeywords("food");
+			Set<String> keywordsSet = KeywordsFetcher.getInstance(categoryFileStream).getCategoryKeywords("food");
 			for(int sentimentCatIndex=0; sentimentCatIndex<sentimentCategories.size(); sentimentCatIndex++)
 			{
 				ltc = new LTCGenerator(linesPerSentiment.get(sentimentCatIndex), keywordsSet);
@@ -404,6 +407,7 @@ public class Summarizer
 		{
 			e.printStackTrace();
 		}
+		return CategorySummaryBean
 	}
 	private static class SortComparator implements Comparator<Map.Entry<String, Double>>
 	{
